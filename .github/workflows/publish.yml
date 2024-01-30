@@ -1,0 +1,45 @@
+# This workflow publishes IFProject to PyPi when a release is created
+#
+# Secrets:
+#   PYPI_TOKEN: The PyPi API token used for publishing
+#
+# Caution:
+#   Releases MUST be tested on Python 3.11.
+#   Please ensure testing workflow uses and identical version.
+#
+# References:
+#   https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+name: Upload Python Package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch Repo
+        uses: actions/checkout@v3
+
+      - name: Fetch Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish package
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

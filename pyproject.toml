@@ -1,0 +1,139 @@
+# IFProject Metadata
+# -----------------------------------------------------------------------------
+
+[project]
+name = "IFProject"
+description = "A Python package for creating Interactive Fiction Narratives!"
+authors = [
+    { name = "Max Suica", email = "max.suica@gmail.com" },
+    { name = "Kyle Hess", email = "donotreply@github.com" },
+]
+license.text = "AGPLv3"
+version = "0.0.0"
+readme = "README.md"
+urls = { Homepage = "https://github.com/maxsu/IFProject" }
+keywords = ["IF", "Interactive Fiction", "PyScript"]
+classifiers = [
+    "Topic :: Games/Entertainment :: Role-Playing",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.12",
+    "Environment :: Web Environment",
+    "Environment :: WebAssembly",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Android",
+    "Operating System :: iOS",
+]
+
+# Dependencies
+# -----------------------------------------------------------------------------
+
+# Required for building and testing
+dependencies = [
+    # Data
+    "pyyaml",   # Read and write YAML files
+    "pydantic", # Define model objects
+
+    # Functional Programming
+    "multimethod", # Define multiple dispatch functions
+
+    # Documentation
+    "mkdocstrings-python", # Generate mkdocs from docstrings
+
+    # Logging
+    "logging518", # Configure logging using Pyproject.toml
+
+    # QA
+    "pre-commit", # Run pre-commit hooks
+    "ruff",       # Linting and formatting
+    "pytest",     # Run test package
+    "coverage",   # Compute test coverage
+    "build",      # Build source distributions
+    "twine",      # Publish package to pypi
+]
+
+
+requires-python = ">=3.11"
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+
+
+# Entry Points
+# -----------------------------------------------------------------------------
+
+[project.scripts]
+live = "tools.live:main"   # Liveload the project from /src
+clean = "tools.clean:main" # Clean project build directories
+
+
+# Linting
+# -----------------------------------------------------------------------------
+
+[tool.ruff]
+include = ["{src,tests}/**/*.py"] # Lint all python files in src and tests
+select = [
+    "I0",   # Import order
+    "E5",   # Long Lines
+    "F6",   # Repeated dict keys and other errors
+    "F7",   # Keyword Syntax errors
+    "F8",   # Unuse/undefined variables
+    "C9",   # McCabe Complexity
+    "F9",   # Use NotImplementedError, not NotImplemented
+    "PERF", # Performance checks
+]
+
+fix = true
+show-fixes = true
+show-source = true
+
+# See:
+# 1. https://docs.astral.sh/ruff/rules/
+# 2. https://docs.astral.sh/ruff/settings/
+
+
+# Testing
+# -----------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+
+# Live-log outputs during tests  (Turn this off for quieter tests)
+log_cli = true
+
+# See: 
+# Log-Cli Reference: https://docs.pytest.org/en/6.2.x/reference.html#confval-log_cli
+
+
+# Logging
+# -----------------------------------------------------------------------------
+
+[tool.logging]
+
+version = 1
+
+[tool.logging.root]
+level = "DEBUG"
+handlers = ["console", "file"]
+
+[tool.logging.handlers.console]
+formatter = "simple"
+stream = "ext://sys.stdout"
+class = "logging.StreamHandler"
+
+[tool.logging.handlers.file]
+formatter = "verbose"
+filename = "main.log"
+class = "logging.FileHandler"
+
+[tool.logging.formatters.simple]
+format = "{asctime} [{levelname}] {message}"
+style = "{"
+
+[tool.logging.formatters.verbose]
+format = "{asctime} {relpath}:{lineno} [{levelname}] {message}"
+class = "tools.logging.Formatter"                               # Provide relpath
+style = "{"

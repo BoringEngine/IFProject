@@ -118,3 +118,9 @@ class Parser:
                 raise NotRecognized(f"Unrecognized node: {node}")
             case _:
                 raise TypeError(f"Expected Node, got: {type(node)}")
+
+
+# Publish the default parser
+parser = Parser()
+parse = parser.parse
+dump = parser.dump

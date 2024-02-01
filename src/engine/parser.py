@@ -11,7 +11,7 @@ from engine.syntax import (
     NodeType,
     Sequence,
     Syntax,
-    simple_syntax,
+    syntax_v1,
 )
 
 PoPo = str | list | dict
@@ -30,12 +30,12 @@ class Parser:
         _dump: Dump an AST Node back into a PoPo.
     """
 
-    def __init__(self, syntax: Syntax = simple_syntax):
+    def __init__(self, syntax: Syntax = syntax_v1):
         """Initialize the Parser with a given syntax.
 
         Args:
             syntax (Syntax, optional): The syntax to use when parsing.
-                Defaults to simple_syntax.
+                Defaults to syntax_v1.
         """
         self.syntax = syntax
 

@@ -1,0 +1,40 @@
+---
+vars:
+  - name: string
+    type: string
+  - name: number
+    type: number
+  - name: bool
+    type: bool
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - print: |
+          Testing if "string" var is equal to "". It should default to this value.
+      - if: string == ""
+        then:
+          - print: |
+              String type was correctly determined to be equal.
+        else:
+          - error:
+      - print: |
+          Testing if "number" var is equal to 0. It should default to this value.
+      - if: number == 0
+        then:
+          - print: |
+              Number type was correctly determined to be equal.
+        else:
+          - error:
+      - print: |
+          Testing if "bool" var is equal to false. It should default to this value.
+      - if: bool == false
+        then:
+          - print: |
+              Bool type was correctly determined to be equal.
+        else:
+          - error:
+      - print: |
+          This is the end of the program.      

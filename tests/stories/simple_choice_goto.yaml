@@ -1,0 +1,33 @@
+---
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - choice: good
+        text: Go to the good block.
+        effects:
+          - print: |
+              You're headed to the good block.
+          - goto: /good
+      - choice: bad
+        text: Go to the bad block.
+        effects:
+          - print: |
+              You're headed to the bad block.
+          - goto: /bad
+      - print: |
+          Now you make a choice (this should only appear once).
+  - name: good
+    content:
+      - print: |
+          You're in the good block.
+      - print: |
+          The program should end now. Goodbye!
+  - name: bad
+    content:
+      - print: |
+          You're in the bad block.
+      - print: |
+          The program should end now. Goodbye!

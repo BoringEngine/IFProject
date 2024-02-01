@@ -1,0 +1,10 @@
+---
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - error:
+      - print: |
+          This is the end of the program.

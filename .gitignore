@@ -1,0 +1,21 @@
+# logs
+*.log
+logs/
+
+# python cache directories
+**/__pycache__/
+
+# python build files
+*.egg-info/
+build/
+
+# python virtual environment
+venv/
+
+# vscode settins 
+.vscode/
+
+# Mac DS STORE files
+**/.DS_Store
+
+dist/

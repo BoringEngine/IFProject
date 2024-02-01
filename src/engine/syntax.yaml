@@ -1,0 +1,159 @@
+---
+DOC:
+  name: Document
+  type: map
+  spec:
+    - name: blocks
+      type: BLOCKS
+      optional: True
+    - name: vars
+      type: VARS
+      options: True
+VARS:
+  name: Vars
+  type: list
+  top_level: vars
+  list_of: VAR
+VAR:
+  name: Var
+  type: map
+  required:
+    name: id
+    type: data_type
+  optional:
+    value: VALUE
+BLOCKS:
+  name: Blocks
+  type: list
+  top_level: blocks
+  list_of: BLOCK
+BLOCK:
+  name: Block
+  type: map
+  required:
+    name: id
+  optional:
+    start: bool
+    img: FILE_PATH
+  one_of:
+    content: CONTENT
+    blocks: BLOCKS
+CONTENT:
+  name: Content
+  type: list
+  list_of: STORY_COMMAND
+STORY_COMMAND:
+  name: Command
+  type: disjunct
+  classes:
+    - CHOICE
+    - GOSUB
+    - GOTO
+    - IF
+    - IF_LIST
+    - MODIFY
+    - PRINT
+    - RETURN
+    - SWITCH
+    - WAIT
+CHOICE:
+  name: Choice
+  type: map
+  required:
+    choice: id
+    effects: CONTENT
+  optional:
+    text: short_text
+    reusable: bool
+    shown_effects: SHOWN_EFFECTS
+SHOWN_EFFECTS:
+  name: ShownEffects
+  type: list
+  list_of: SHOWN_EFFECT
+SHOWN_EFFECT:
+  name: ShownEffect
+  type: disjunct
+  classes:
+    - GAIN_EFFECT
+    - PAY_EFFECT
+GAIN_EFFECT:
+  name: GainEffect
+  type: map
+  required:
+    gain: id
+    amount: uint
+PAY_EFFECT:
+  name: PayEffect
+  type: map
+  required:
+    pay: id
+    amount: uint
+GOSUB:
+  name: GoSub
+  type: map
+  required:
+    gosub: address
+GOTO:
+  name: GoTo
+  type: map
+  required:
+    goto: address
+IF:
+  name: If
+  type: map
+  required:
+    if: expression
+    then: CONTENT
+  optional:
+    else: CONTENT
+IF_LIST:
+  name: IfList
+  type: map
+  required:
+    if_list: IFS
+IFS:
+  name: Ifs
+  type: list
+  list_of: IF
+MODIFY:
+  name: Modify
+  type: map
+  required:
+    modify: id
+  one_of:
+    add: expression
+    subtract: expression
+    multiply: expression
+    divide: expression
+    set: expression
+PRINT:
+  name: Print
+  type: map
+  required:
+    print: long_text
+RETURN:
+  name: Return
+  type: map
+  required:
+    return: \null
+SWITCH:
+  name: Switch
+  type: map
+  required:
+    switch: id
+    cases: CASES
+CASES:
+  name: Cases
+  type: list
+  list_of: CASE
+CASE:
+  name: Case
+  type: map
+  required:
+    case: value
+    then: CONTENT
+WAIT:
+  name: Wait
+  type: map
+  required:
+    wait: \null

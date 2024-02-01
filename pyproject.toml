@@ -1,5 +1,6 @@
 # IFProject Metadata
 # -----------------------------------------------------------------------------
+# https://packaging.python.org/en/latest/specifications/pyproject-toml/
 
 [project]
 name = "IFProject"
@@ -14,6 +15,7 @@ readme = "README.md"
 urls = { Homepage = "https://github.com/maxsu/IFProject" }
 keywords = ["IF", "Interactive Fiction", "PyScript"]
 classifiers = [
+    # Classifiers list: https://pypi.org/classifiers/
     "Topic :: Games/Entertainment :: Role-Playing",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3",
@@ -28,44 +30,30 @@ classifiers = [
     "Operating System :: iOS",
 ]
 
+
 # Dependencies
 # -----------------------------------------------------------------------------
 
-# Required for building and testing
 dependencies = [
-    # Data
-    "pyyaml",   # Read and write YAML files
-    "pydantic", # Define model objects
-
-    # Functional Programming
-    "multimethod", # Define multiple dispatch functions
-
-    # Documentation
-    "mkdocstrings-python", # Generate mkdocs from docstrings
-
-    # Logging
-    "logging518", # Configure logging using Pyproject.toml
-
     # QA
-    "ruff",     # Linting and formatting
-    "pytest",   # Run test package
-    "coverage", # Compute test coverage
-    "mypy",     # Static Type Checking
-
-    # Hooks
-    "autohooks",               # Configure git hooks
-    "autohooks-plugin-ruff",   # Ruff plugin for autohooks
-    "autohooks-plugin-pytest", # Pytest plugin for autohooks
-    "autohooks-plugin-mypy",   # Mypy plugin for autohooks
-
-
+    "ruff",                    # Linting and formatting
+    "pytest",                  # Run test package
+    "coverage",                # Compute test coverage
+    "mypy",                    # Static type checking
+    "autohooks",               # Install git hooks
+    "autohooks-plugin-ruff",   # Ruff git hook
+    "autohooks-plugin-pytest", # Pytest git hook
+    "autohooks-plugin-mypy",   # Mypy git hook
     # Packaging
     "build", # Build source distributions
     "twine", # Publish package to pypi
+    # Documentation
+    "mkdocstrings-python", # Generate mkdocs from docstrings
+    # Logging
+    "logging518", # Configure logging using Pyproject.toml
 ]
 
-
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 
 [build-system]
@@ -74,59 +62,51 @@ requires = ["setuptools", "wheel"]
 
 # Entry Points
 # -----------------------------------------------------------------------------
+# https://packaging.python.org/en/latest/specifications/entry-points/
 
 [project.scripts]
 live = "tools.live:main"   # Liveload the project from /src
 clean = "tools.clean:main" # Clean project build directories
 
 
-# Hooks
-# -----------------------------------------------------------------------------
-[tool.autohooks]
-pre-commit = ["ruff", "pytest", "mypy"]
-
-# Linting
+# Code Quality
 # -----------------------------------------------------------------------------
 
+# Testing: https://docs.pytest.org/en/7.1.x/reference/reference.html#ini-options-ref
+[tool.pytest.ini_options]
+log_cli = true # Live-log outputs during tests
+
+# Formatting: https://docs.astral.sh/ruff/settings/#format
+[tool.ruff.format]
+docstring-code-format = true # Format code blocks in docstrings
+
+# Linting: https://docs.astral.sh/ruff/settings/
 [tool.ruff]
-include = ["{src,tests}/**/*.py"] # Lint all python files in src and tests
-select = [
-    "I0",   # Import order
-    "E5",   # Long Lines
+include = ["{src,tests}/**/*.py"] # Lint source and test files
+fix = true # Apply fixes if possible
+show-fixes = true # Show applied fix codes
+show-source = true # Show source for unfixable errors
+select = [ # Rules: https://docs.astral.sh/ruff/rules/
+    "I0",   # Sort Import Lines
+    "E5",   # Flag Long Lines (>88 characters)
     "F6",   # Repeated dict keys and other errors
     "F7",   # Keyword Syntax errors
     "F8",   # Unuse/undefined variables
-    "C9",   # McCabe Complexity
+    "C9",   # McCabe Complexity >10
     "F9",   # Use NotImplementedError, not NotImplemented
     "PERF", # Performance checks
 ]
 
-fix = true
-show-fixes = true
-show-source = true
-
-# See:
-# 1. https://docs.astral.sh/ruff/rules/
-# 2. https://docs.astral.sh/ruff/settings/
-
-
-# Testing
-# -----------------------------------------------------------------------------
-
-[tool.pytest.ini_options]
-
-# Live-log outputs during tests  (Turn this off for quieter tests)
-log_cli = true
-
-# See: 
-# Log-Cli Reference: https://docs.pytest.org/en/6.2.x/reference.html#confval-log_cli
+# Commit Hooks: https://greenbone.github.io/autohooks/configuration.html
+[tool.autohooks]
+pre-commit = ["ruff", "pytest", "mypy"]
 
 
 # Logging
 # -----------------------------------------------------------------------------
+# https://docs.python.org/3/library/logging.config.html#dictionary-schema-details
 
 [tool.logging]
-
 version = 1
 
 [tool.logging.root]
@@ -139,15 +119,12 @@ stream = "ext://sys.stdout"
 class = "logging.StreamHandler"
 
 [tool.logging.handlers.file]
-formatter = "verbose"
-filename = "main.log"
-class = "logging.FileHandler"
+filename = "aces.log"
+formatter = "simple"
+class = "logging.RotatingFileHandler"
+maxBytes = 1_000_000                  # Rotate the log file at 1MB
+backupCount = 1                       # Keep the last rotated log file (Total: 2MB)
 
+# Format Attributes: https://docs.python.org/3/library/logging.html#logrecord-attributes
 [tool.logging.formatters.simple]
-format = "{asctime} [{levelname}] {message}"
-style = "{"
-
-[tool.logging.formatters.verbose]
-format = "{asctime} {relpath}:{lineno} [{levelname}] {message}"
-class = "tools.logging.Formatter"                               # Provide relpath
-style = "{"
+format = "%(asctime)s [%(name)][%(levelname)s] %(message)s"

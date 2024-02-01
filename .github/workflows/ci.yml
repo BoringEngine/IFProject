@@ -1,0 +1,38 @@
+# This workflow builds and tests IFProject
+
+name: ci
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Fetch Repo
+        uses: actions/checkout@v3
+
+      - name: Fetch Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.12
+
+      - name: Install package
+        run: pip install -U .
+
+      - name: Test package
+        run: |
+          coverage run --source=src/engine -m pytest
+          coverage report
+
+      - name: Lint package
+        run: |
+          ruff format --check  # check formatting
+          ruff check --no-fix  # check linting

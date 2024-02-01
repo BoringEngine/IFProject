@@ -1,0 +1,19 @@
+---
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - print: |
+          We are entering the gosub. It should print "Kangaroo". Then we should receive confirmation of exiting the subroutine.
+      - gosub: /subroutine
+      - print: |
+          We have exited the subroutine. The program should now terminate.
+  - name: subroutine
+    content:
+      - print: |
+          Kangaroo
+      - return:
+      # This should never execute; we should have already "returned"
+      - error:

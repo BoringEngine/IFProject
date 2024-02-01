@@ -1,0 +1,20 @@
+---
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - goto: /sibling_block
+      - print: |
+          This shouldn't be printed.
+    blocks:
+      - name: child_block
+        content:
+          - print: |
+              Arrived at child block. Terminating program.
+  - name: sibling_block
+    content:
+      - print: |
+          Arrived at sibling_block.
+      - goto: /start/child_block

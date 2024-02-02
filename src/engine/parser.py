@@ -1,4 +1,6 @@
 from pathlib import Path
+import types
+from typing import Any
 
 import yaml
 
@@ -11,6 +13,7 @@ from engine.syntax import (
     NodeType,
     Sequence,
     Syntax,
+    Tag,
     syntax_v1,
 )
 
@@ -118,6 +121,68 @@ class Parser:
                 raise NotRecognized(f"Unrecognized node: {node}")
             case _:
                 raise TypeError(f"Expected Node, got: {type(node)}")
+
+
+def class_loader(ns: dict[str, Any]):
+    """A class loader that can load a class from a namespace."""
+    ns["spec"] = []
+    ns["only_one"] = []
+    return ns
+
+
+def load_syntax(syntax_file: Path):
+    """WIP: An attempt to load the syntax file into a Syntax object"""
+    syntax_str = syntax_file.read_text()
+    syntax_dict = yaml.load(syntax_str, Loader=yaml.FullLoader)
+
+    node_map = {}
+
+    # Create the Node classes
+    for node_spec in syntax_dict.values():
+        name = node_spec["name"]
+        type = node_spec["type"]
+        match type:
+            case "expression":
+                base = Expression
+            case "sequence":
+                base = Sequence
+            case "map":
+                base = Map
+            case _:
+                raise ValueError(f"Unrecognized node type: {type}")
+
+        node_map[name] = types.new_class(name, bases=(base,), exec_body=class_loader)
+        node_map[name].node_spec = node_spec
+
+    # Assign the Tag types to the Node classes
+    for node_spec in zip(syntax_dict.items(), node_map.items()):
+        # Unpack required tags
+        for name, type in node_spec["required"].items():
+            # Assign string to tag type - we need to replace this with the actual
+            # Node class that corresponds to the string in a later step
+            node_class.spec.append(Tag(key=name, type=type, optional=False))
+        # Unpack optional tags
+        for name, type in node_spec["optional"].items():
+            node_class.spec.append(Tag(name, type, optional=True))
+        # Unpack only_one
+        for name, type in node_spec["only_one"].items():
+            node_class.only_one.append(Tag(name, type))
+
+    for tag, node_spec in syntax_dict.items():
+        node_class = types.new_class(node_spec["name"], bases=(Map,))
+        node_class.spec = []
+        node_class.only_one = []
+        # Unpack required tags
+        for name, type in node_spec["required"].items():
+            # Assign string to tag type - we need to replace this with the actual
+            # Node class that corresponds to the string in a later step
+            node_class.spec.append(Tag(key=name, type=type, optional=False))
+        # Unpack optional tags
+        for name, type in node_spec["optional"].items():
+            node_class.spec.append(Tag(name, type, optional=True))
+        # Unpack only_one
+        for name, type in node_spec["only_one"].items():
+            node_class.only_one.append(Tag(name, type))
 
 
 # Publish the default parser

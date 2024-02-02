@@ -4,10 +4,13 @@
 | Story                    | Description                    |
 +--------------------------+--------------------------------+
 | hello_world              | tests PRINT                    |
+| error                    | tests ERROR                    |
 | simple_choice            | tests CHOICE                   |
 | simple_goto              | tests GOTO                     |
 | simple_choice_goto       | tests CHOICE and GOTO together |
-| simple_vars              | tests Vars                     |
+| simple_vars              | tests Vars and IF              |
+| default_var_values       | tests Vars and IF              |
+| simple_gosub             | tests GOSUB                    |
 +--------------------------+--------------------------------+
 
 

@@ -11,7 +11,7 @@ from engine.syntax import (
     MapType,
     Node,
     NodeType,
-    Sequence,
+    List,
     Syntax,
     Tag,
     syntax_v1,
@@ -88,8 +88,8 @@ class Parser:
             case str(), Expression():
                 return node_type(data)
 
-            case list(), Sequence():
-                return Sequence([self._parse(item, None) for item in data])
+            case list(), List():
+                return List([self._parse(item, None) for item in data])
 
             case dict(), None | Map():
                 return self._parse_map(data, node_type)
@@ -115,7 +115,7 @@ class Parser:
                 return data
             case Map(data):
                 return {k: self._dump(v) for k, v in data.items()}
-            case Sequence(data):
+            case List(data):
                 return [self._dump(item) for item in data]
             case Node():
                 raise NotRecognized(f"Unrecognized node: {node}")
@@ -145,7 +145,7 @@ def load_syntax(syntax_file: Path):
             case "expression":
                 base = Expression
             case "sequence":
-                base = Sequence
+                base = List
             case "map":
                 base = Map
             case _:

@@ -25,12 +25,12 @@ ExpressionTypes = list[ExpressionType]
 
 
 @dataclass
-class Sequence(Node):
+class List(Node):
     data: list
 
 
-SequenceType = type[Sequence]
-SequenceTypes = list[SequenceType]
+ListType = type[List]
+ListTypes = list[ListType]
 
 
 @dataclass
@@ -69,8 +69,8 @@ class Syntax:
         return result
 
     @property
-    def sequences(self) -> SequenceTypes:
-        return self.by_type(Sequence)
+    def lists(self) -> ListTypes:
+        return self.by_type(List)
 
     @property
     def maps(self) -> MapTypes:
@@ -88,8 +88,8 @@ class Syntax:
 
 empty_syntax = Syntax(types=[])
 
-initial_syntax = Syntax(types=[Expression, Sequence])
-syntax_v1 = Syntax(types=[Expression, Sequence])
+initial_syntax = Syntax(types=[Expression, List])
+syntax_v1 = Syntax(types=[Expression, List])
 
 
 # Basic Syntax ----------------------------------------------------------------
@@ -104,8 +104,8 @@ class A(Map):
 class If(Map):
     spec: Tags = (
         Tag("if", Expression),
-        Tag("then", Sequence),
-        Tag("else", Sequence, optional=True),
+        Tag("then", List),
+        Tag("else", List, optional=True),
     )
 
 

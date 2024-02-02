@@ -1,6 +1,6 @@
 import pytest
 from engine.parser import Parser
-from engine.syntax import A, Expression, If, Node, Sequence
+from engine.syntax import A, Expression, If, Node, List
 
 
 class MyTestCase:
@@ -25,12 +25,12 @@ def test_cases():
         expects = If(
             {
                 "if": Expression(data="condition1"),
-                "then": Sequence(
+                "then": List(
                     [
                         A(data={"a": Expression(data="action1")}),
                     ]
                 ),
-                "else": Sequence(
+                "else": List(
                     [
                         A(data={"a": Expression(data="action2")}),
                     ]

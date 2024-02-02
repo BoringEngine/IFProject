@@ -3,7 +3,7 @@ from engine.syntax import (
     Expression,
     If,
     Node,
-    Sequence,
+    List,
     Variable,
     empty_syntax,
     simple_syntax,
@@ -37,10 +37,10 @@ def test_initialization(example_expression):
     assert example_expression.pattern == ".*"
 
 
-# Sequence
-def test_empty_sequence():
-    empty_sequence = Sequence([])
-    assert empty_sequence.data == []
+# List
+def test_empty_list():
+    empty_list = List([])
+    assert empty_list.data == []
 
 
 # Map ---------------------------------------------------------------------
@@ -60,7 +60,7 @@ def test_get_item(example_map):
 
 def test_empty_syntax():
     assert not empty_syntax.expressions
-    assert not empty_syntax.sequences
+    assert not empty_syntax.lists
     assert not empty_syntax.maps
 
 

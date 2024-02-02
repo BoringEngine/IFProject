@@ -144,7 +144,7 @@ def load_syntax(syntax_file: Path):
         match type:
             case "expression":
                 base = Expression
-            case "sequence":
+            case "list":
                 base = List
             case "map":
                 base = Map

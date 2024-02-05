@@ -1,143 +1,244 @@
-import types
-from dataclasses import dataclass, replace
+from __future__ import annotations
+
+import ast
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-import yaml
+from engine.ast import *
 
-# Base Nodes ------------------------------------------------------------------
-
-
-class Node:
-    @property
-    def type(self):
-        return self.__class__.__name__
+# Value Nodes -----------------------------------------------------------------
 
 
-NodeType = type[Node]
-NodeTypes = tuple[NodeType]
+class Id(Value):
+    type: str
+    pattern = "^[a-zA-Z0-9_-]+$"
 
 
-class NodeRef:
-    name: str
-    ...
+class Address(Value):
+    type: str
+    pattern = "^[a-zA-Z_]+[a-zA-Z0-9_.]+$"
 
 
-class ExpressionRef(NodeRef):
-    ...
-
-
-class SequenceRef(NodeRef):
-    ...
-
-
-class MapRef(NodeRef):
-    name: str
+class Text(Value):
     type: str
 
 
-@dataclass
-class Expression(Node):
-    data: str
-    pattern: str = ".*"
+class Bool(Value):
+    type: bool
 
 
-ExpressionType = type[Expression]
-ExpressionTypes = tuple[ExpressionType]
+class Expression(Value):
+    type: str
+
+    def check(self, value: str):
+        # Test the value is valid python
+        try:
+            ast.parse(value)
+        except SyntaxError as e:
+            raise ValueError(f"Invalid expression: {value}") from e
+
+    def eval(self, context: dict):
+        if context is None:
+            raise ValueError("Context is required to evaluate an expression")
+        return eval(self.value, context)
 
 
-@dataclass
-class Sequence(Node):
-    data: list
+class UInt(Value):
+    type: int
+
+    def check(self, value: int):
+        if value < 0:
+            raise ValueError(f"Invalid value for uint: {value}")
 
 
-SequenceType = type[Sequence]
-SequenceTypes = tuple[SequenceType]
+class FilePath(Value):
+    type: Path
 
 
-@dataclass
-class Tag:
-    key: str
-    type: Node
-    optional: bool = False
+# Doc
 
 
-Tags = list[Tag]
+class Doc(Map):
+    vars: Vars
+    blocks: Blocks
 
 
-@dataclass
-class Map(Node):
-    data: dict
-    spec: Tags
-
-    def __getitem__(self, key: str) -> Any:
-        return self.data[key]
+class Blocks(List):
+    list_of: Block
 
 
-MapType = type[Map]
-MapTypes = tuple[MapType]
+class Block(Map):
+    name: Id
+    start: Bool | None
+    img: FilePath | None
+    content: Content | None
+    blocks: Blocks | None
+    _one_of = "content", "blocks"
+
+
+class Vars(List):
+    list_of: Var
+
+
+class Var(Map):
+    name: Id
+    type: ValueType
+    value: Value | None
+
+
+# Contents / Commands
+
+
+class Content(List):
+    list_of: StoryCommand
+
+
+class StoryCommand(Disjunct):
+    types: (
+        Choice
+        | Error
+        | GoSub
+        | GoTo
+        | If
+        | IfList
+        | Modify
+        | Print
+        | Return
+        | Switch
+        | Wait
+    )
+
+
+# Choice
+
+
+class Choice(Map):
+    choice: Id
+    effects: Content
+    text: Text | None
+    reusable: Bool | None
+    shown_effects: ShownEffects | None
+
+
+class ShownEffects(List):
+    list_of: ShownEffect
+
+
+class ShownEffect(Disjunct):
+    types: GainEffect | PayEffect
+
+
+class GainEffect(Map):
+    gain: Id
+    amount: UInt
+
+
+class PayEffect(Map):
+    pay: Id
+    amount: UInt
+
+
+# Goto / GoSub
+
+
+class GoSub(Map):
+    gosub: Address
+
+
+class GoTo(Map):
+    goto: Address
+
+
+# If
+
+
+class If(Map):
+    _if: Expression
+    then: Content
+    _else: Content | None
+
+
+class IfList(Map):
+    if_list: Ifs
+
+
+class Ifs(List):
+    list_of: If
+
+
+# Switch
+
+
+class Switch(Map):
+    switch: Id
+    cases: List
+
+
+class Cases(List):
+    list_of: Case
+
+
+class Case(Map):
+    case: Value
+    then: List
+
+
+# Modify
+
+
+class Modify(Map):
+    modify: Id
+    add: Expression | None
+    subtract: Expression | None
+    multiply: Expression | None
+    divide: Expression | None
+    set: Expression | None
+    _one_of = "add", "subtract", "multiply", "divide", "set"
+
+
+# Other Commands
+
+
+class Error(Map):
+    error: None
+
+
+class Print(Map):
+    print: Text
+
+
+class Return(Map):
+    return_: None
+
+
+class Wait(Map):
+    wait: None
 
 
 # Syntax ----------------------------------------------------------------------
 
 
-@dataclass
-class Syntax:
-    types: NodeTypes
-
-    @property
-    def expressions(self) -> ExpressionTypes:
-        return self.by_type(Expression)
-
-    @property
-    def sequences(self) -> SequenceTypes:
-        return self.by_type(Sequence)
-
-    @property
-    def maps(self) -> MapTypes:
-        return self.by_type(Map)
-
-    def by_type(self, target_type: NodeType) -> NodeTypes:
-        return [t for t in self.types if issubclass(t, target_type)]
-
-    def extend(self, *new_types: NodeTypes) -> "Syntax":
-        return replace(self, types=self.types + list(new_types))
-
-
-# Initial syntax --------------------------------------------------------------
-
-
-empty_syntax = Syntax(types=[])
-
-initial_syntax = Syntax(types=[Expression, Sequence])
-
-
-# Basic Syntax ----------------------------------------------------------------
-
-
-@dataclass
-class A(Map):
-    spec: Tags = (Tag("a", Expression),)
-
-
-@dataclass
-class If(Map):
-    spec: Tags = (
-        Tag("if", Expression),
-        Tag("then", Sequence),
-        Tag("else", Sequence, optional=True),
-    )
-
-
-@dataclass
-class Variable(Expression):
-    pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
-
-
-simple_syntax = initial_syntax.extend(If, A, Variable)
-syntax_v1 = simple_syntax
-
-
-node_class_dict = {
-    "A": A,
-}
+class SyntaxV1(Syntax):
+    root: NodeType = Doc
+    values: ValueTypes = [Id, Address, Text, Bool, Expression, UInt, FilePath]
+    lists: ListTypes = [Vars, Blocks, Content, ShownEffects, Ifs, Cases]
+    maps: MapTypes = [
+        Doc,
+        Var,
+        Block,
+        Choice,
+        GainEffect,
+        PayEffect,
+        GoSub,
+        GoTo,
+        If,
+        IfList,
+        Modify,
+        Print,
+        Return,
+        Switch,
+        Case,
+        Error,
+        Wait,
+    ]
+    disjuncts: NodeTypes = [ShownEffect, StoryCommand]

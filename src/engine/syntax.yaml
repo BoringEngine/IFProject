@@ -59,7 +59,7 @@ CHOICE:
     choice: id
     effects: CONTENT
   optional:
-    text: short_text
+    text: text
     reusable: bool
     shown_effects: SHOWN_EFFECTS
 SHOWN_EFFECTS:
@@ -131,7 +131,7 @@ PRINT:
   name: Print
   type: map
   required:
-    print: long_text
+    print: text
 RETURN:
   name: Return
   type: map
@@ -158,3 +158,215 @@ WAIT:
   type: map
   required:
     wait: \null
+
+
+
+# Lists
+
+VARS:
+  name: Vars
+  type: list
+  list_of: VAR
+
+BLOCKS:
+  name: Blocks
+  type: list
+  list_of: BLOCK
+
+CONTENT:
+  name: Content
+  type: list
+  list_of: STORY_COMMAND
+
+IFS:
+  name: Ifs
+  type: list
+  list_of: IF
+
+CASES:
+  name: Cases
+  type: list
+  list_of: CASE
+
+SHOWN_EFFECTS:
+name: ShownEffects
+type: list
+list_of: SHOWN_EFFECT
+
+
+
+
+
+# Maps
+
+DOC:
+  name: Document
+  type: map
+  root: true
+  optional:
+    vars: VARS
+    blocks: BLOCKS
+VAR:
+  name: Var
+  type: map
+  required:
+    name: id
+    type: data_type
+  optional:
+    value: VALUE
+BLOCK:
+  name: Block
+  type: map
+  required:
+    name: id
+  optional:
+    start: bool
+    img: FILE_PATH
+  one_of:
+    content: CONTENT
+    blocks: BLOCKS
+CHOICE:
+  name: Choice
+  type: map
+  required:
+    choice: id
+    effects: CONTENT
+  optional:
+    text: text
+    reusable: bool
+    shown_effects: SHOWN_EFFECTS
+GAIN_EFFECT:
+  name: GainEffect
+  type: map
+  required:
+    gain: id
+    amount: uint
+PAY_EFFECT:
+  name: PayEffect
+  type: map
+  required:
+    pay: id
+    amount: uint
+ERROR:
+  name: Error
+  type: map
+  required:
+    error: \null
+GOSUB:
+  name: GoSub
+  type: map
+  required:
+    gosub: address
+GOTO:
+  name: GoTo
+  type: map
+  required:
+    goto: address
+IF:
+  name: If
+  type: map
+  required:
+    if: expression
+    then: CONTENT
+  optional:
+    else: CONTENT
+IF_LIST:
+  name: IfList
+  type: map
+  required:
+    if_list: IFS
+MODIFY:
+  name: Modify
+  type: map
+  required:
+    modify: id
+  one_of:
+    add: expression
+    subtract: expression
+    multiply: expression
+    divide: expression
+    set: expression
+PRINT:
+  name: Print
+  type: map
+  required:
+    print: text
+RETURN:
+  name: Return
+  type: map
+  required:
+    return: \null
+SWITCH:
+  name: Switch
+  type: map
+  required:
+    switch: id
+    cases: CASES
+CASE:
+  name: Case
+  type: map
+  required:
+    case: value
+    then: CONTENT
+WAIT:
+  name: Wait
+  type: map
+  required:
+    wait: \null
+
+
+# Disjuncts
+
+STORY_COMMAND:
+  name: Command
+  type: disjunct
+  classes:
+    - CHOICE
+    - ERROR
+    - GOSUB
+    - GOTO
+    - IF
+    - IF_LIST
+    - MODIFY
+    - PRINT
+    - RETURN
+    - SWITCH
+    - WAIT
+SHOWN_EFFECT:
+  name: ShownEffect
+  type: disjunct
+  classes:
+    - GAIN_EFFECT
+    - PAY_EFFECT
+
+
+# Data types
+
+Id:
+  type: str
+  pattern: ^[a-zA-Z0-9_-]+$
+
+Uint:
+  type: int
+  minimum: 0
+
+Address:
+  type: str
+  pattern: ^[a-zA-Z_]+[a-zA-Z0-9_.]+$ # TODO: Add more specific pattern
+
+FilePath:
+  type: str
+  pattern: ^[a-zA-Z0-9_-/]+$
+
+LongText:
+  type: str
+
+ShortText:
+  type: str
+  maxLength: 100
+
+Bool:
+  type: bool
+
+Expression:
+  type: str

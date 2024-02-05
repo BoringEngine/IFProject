@@ -1,126 +1,118 @@
+import types
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 from engine.exceptions import NotRecognized
 from engine.syntax import (
-    Expression,
+    List,
+    ListType,
     Map,
     MapType,
     Node,
     NodeType,
-    Sequence,
     Syntax,
-    syntax_v1,
+    SyntaxV1,
+    Value,
+    ValueType,
 )
 
 PoPo = str | list | dict
 
 
 class Parser:
-    """A Parser that can parse Yaml or PoPo into AST Nodes and back again.
+    """A Parser that can parse Yaml into AST Nodes and back again."""
 
-    Public Methods:
-        parse: Parse a YAML string or file into an AST Node.
-        dump: Dump an AST Node into a YAML string.
-
-    Private Methods:
-        _parse: Parse a PoPo into an AST Node according to the given node_type.
-        _parse_map: Parse a dictionary into a Map node.
-        _dump: Dump an AST Node back into a PoPo.
-    """
-
-    def __init__(self, syntax: Syntax = syntax_v1):
-        """Initialize the Parser with a given syntax.
-
-        Args:
-            syntax (Syntax, optional): The syntax to use when parsing.
-                Defaults to syntax_v1.
-        """
+    def __init__(self, syntax: Syntax):
         self.syntax = syntax
 
     def parse(self, data: str | Path) -> Node:
-        """Parse a YAML string or file into an AST Node.
-
-        Args:
-            data (str | Path): The YAML data string or file to parse.
-
-        Returns:
-            Node: An AST Node that represents the parsed YAML data.
-
-        Raises:
-            NotRecognized: If the data is not recognized.
-        """
+        """Parse a YAML string or file into an AST Node."""
+        # Read the file if given
         if isinstance(data, Path):
             data = data.read_text()
+        # Parse the file into a PoPo
+        data = yaml.safe_load(data)
+        # Parse the PoPo into a Node
+        return self.parse_popo(data, self.syntax.root)
 
-        data = yaml.load(data, Loader=yaml.FullLoader)
-        return self._parse(data, node_type=None)
+    def dump(self, node: Node, file: Path | None = None) -> str:
+        """Dump an AST Node into a YAML string or file."""
 
-    def dump(self, node: Node, file: Path = None) -> str:
-        """Dump an AST Node into a YAML string.
+        # Recursively dump the node into a PoPo
+        def _dump(node: Node) -> PoPo:
+            match node:
+                case Value():
+                    return node.value
+                case Map():
+                    return {k: _dump(v) for k, v in node._data.items}
+                case List():
+                    return [_dump(item) for item in node._data]
+                case Node():
+                    raise NotRecognized(f"Unrecognized node: {node}")
+                case _:
+                    raise TypeError(f"Expected Node, got: {type(node)}")
 
-        Args:
-            node (Node): The AST Node to dump.
-            file (Path, optional): The file to dump the YAML string to.
-
-        Returns:
-            str: A string that represents the YAML format of the AST Node.
-
-        Effects:
-            Writes the YAML string to the given file.
-        """
+        # Dump the PoPo into a YAML string
         result = yaml.dump(self._dump(node))
 
+        # Write the result to file, if given
         if file:
             file.write_text(result)
 
         return result
 
-    def _parse(self, data: PoPo, node_type: NodeType) -> Node:
+    # Private methods
+
+    def parse_popo(self, data: PoPo, node_type: NodeType) -> Node:
         # Hack to match node types with class patterns
-        node_type_instance = node_type({}) if node_type else None
+        node_type_instance = node_type.__new__(node_type) if node_type else None
 
         match data, node_type_instance:
-            case str(), Expression():
-                return node_type(data)
+            case str(), Value():
+                return self.parse_value(data, node_type)
 
-            case list(), Sequence():
-                return Sequence([self._parse(item, None) for item in data])
+            case list(), List():
+                return self.parse_list(data, node_type)
 
             case dict(), None | Map():
-                return self._parse_map(data, node_type)
+                return self.parse_map(data, node_type)
 
             case _:
                 raise TypeError(f"Data: {data} does not match node {node_type}")
 
-    def _parse_map(self, data, node_type: MapType | None) -> Map:
+    def parse_value(self, data: str, node_type: ValueType) -> Value:
+        return node_type(data)
+
+    def parse_list(self, parsed_data, node_type: ListType) -> List:
+        # Check arg types early
+        for item in parsed_data:
+            if not isinstance(item, node_type.list_of):
+                raise NotRecognized(
+                    f"Invalid type for {node_type}-list: {type(item)}, value: {item}"
+                )
+
+        parsed_data = (self.parse_popo(item, node_type.list_of) for item in parsed_data)
+        return node_type(*parsed_data)
+
+    def parse_map(self, data, node_type: MapType | None) -> Map:
         candidate_nodes = [node_type] if node_type else self.syntax.maps
         for node in candidate_nodes:
-            if all(tag.key in data or tag.optional for tag in node.spec):
-                result = {
-                    tag.key: self._parse(data[tag.key], tag.type)
-                    for tag in node.spec
-                    if tag.key in data
-                }
-                return node(result)
+            # Ensure all required tags are present
+            if not all(tag.key in data or tag.optional for tag in node.spec):
+                continue
+            # Parse tag values
+            result = {
+                tag.key: self.parse_popo(data[tag.key], tag.type)
+                for tag in node.spec
+                if tag.key in data
+            }
+            return node(result)
         raise NotRecognized(f"Unrecognized map: {data}")
-
-    def _dump(self, node: Node) -> PoPo:
-        match node:
-            case Expression(data):
-                return data
-            case Map(data):
-                return {k: self._dump(v) for k, v in data.items()}
-            case Sequence(data):
-                return [self._dump(item) for item in data]
-            case Node():
-                raise NotRecognized(f"Unrecognized node: {node}")
-            case _:
-                raise TypeError(f"Expected Node, got: {type(node)}")
 
 
 # Publish the default parser
-parser = Parser()
+parser = Parser(SyntaxV1)
 parse = parser.parse
 dump = parser.dump

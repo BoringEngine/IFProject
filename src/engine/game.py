@@ -9,7 +9,11 @@ class Game:
     def __init__(self):
         self.interpreter = Interpreter()
         self.view = View()
-        # self.story = ?
+        dispatcher.connect(self.handle_exit, signal="Exit_Game")
 
     def start(self):
         self.interpreter.run()
+
+    def handle_exit(self):
+        # Do any cleanup here
+        exit()

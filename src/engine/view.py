@@ -1,5 +1,3 @@
-from typing import Map
-
 from pydispatch import dispatcher
 
 
@@ -11,7 +9,7 @@ class View:
     def print_to_console(self, sender, text: str):
         print(text)
 
-    def show_choices(self, sender, choices: Map[str, bool]):
+    def show_choices(self, sender, choices: dict[str, bool]):
         choice: str
         while True:
             choice = input("Choices are " + list(choices.keys()) + "\nEnter something")

@@ -128,16 +128,46 @@ class If(Map):
         Tag("else", Sequence, optional=True),
     )
 
+@dataclass
+class Doc(Map):
+    spec: Tags = (
+        Tag("blocks", Sequence),
+    )
+
+@dataclass
+class Blocks(Sequence):
+    pass
+
+@dataclass
+class Block(Map):
+    spec: Tags = (
+        Tag("name", Expression),
+        Tag("content", Sequence),
+    )
+
+@dataclass
+class Content(Sequence):
+    pass
+
+@dataclass
+class Print(Map):
+    spec: Tags = (
+        Tag("print", Expression),
+    )
 
 @dataclass
 class Variable(Expression):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
+@dataclass
+class Text(Expression):
+    pattern: str = "[a-zA-Z_]*"
 
-simple_syntax = initial_syntax.extend(If, A, Variable)
+simple_syntax = initial_syntax.extend(If, A, Variable, Doc, Block, Print, Text)
 syntax_v1 = simple_syntax
 
 
 node_class_dict = {
     "A": A,
+    "print": Print
 }

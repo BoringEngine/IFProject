@@ -11,9 +11,11 @@ class Game:
         self.view = View()
         dispatcher.connect(self.handle_exit, signal="Exit_Game")
 
-    def start(self):
-        self.interpreter.run()
+    def run(self):
+        """Run the interpreter until Exit_Game is dispatched."""
+        while True:
+            self.interpreter.step()
 
-    def handle_exit(self):
-        # Do any cleanup here
+    def handle_exit(self, sender):
+        """Handle an Exit_Game event, cleanup and exit the game."""
         exit()

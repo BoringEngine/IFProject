@@ -16,4 +16,8 @@ from engine.game import Game
 
 def main():
     game = Game()
-    game.start()
+    game.run()
+
+
+if __name__ == "__main__":
+    main()

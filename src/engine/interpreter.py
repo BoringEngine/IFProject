@@ -8,14 +8,10 @@ class Interpreter:
         # Mock choices: True is a placeholder for Address
         self.choices = {"north": True, "south": True, "east": True, "west": True}
 
-    def run(self):
-        # Keep running steps until we return False
-        # (meaning we should wait for user input)
-        while self.step():
-            pass
-
+    def step(self):
+        """Run the interpreter one step"""
+        # Pretend the interpreter has some logic to choose a direction
         dispatcher.send("Give_Choice", self, self.choices)
 
     def handle_choice(self, sender, choice: str):
-        self.address = self.choice_to_address(choice)
-        self.run()
+        ...  # Currently, we don't do anything with the choice

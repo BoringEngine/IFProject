@@ -10,12 +10,19 @@ class View:
         print(text)
 
     def show_choices(self, sender, choices: dict[str, bool]):
-        choice: str
         while True:
-            choice = input("Choices are " + list(choices.keys()) + "\nEnter something")
+            # Display the choices
+            print(f"Your choices are: {", ".join(choices.keys())}")
 
-            # Only allow choice if it's valid
-            if choice in choices:
+            # Get the user's choice
+            choice = input("Please enter a choice or type 'exit' to quit.")
+
+            # Allow the user to exit
+            if choice == "exit":
+                dispatcher.send("Exit_Game", self)
+
+            # Send valid choices to the interpreter
+            elif choice in choices:
                 dispatcher.send("Make_Choice", self, choice)
 
             print("Invalid choice, try again.\n")

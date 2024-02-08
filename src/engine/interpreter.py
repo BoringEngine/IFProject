@@ -11,8 +11,8 @@ class Interpreter:
         while self.step():
             pass
 
-        dispatcher.send("Give_Choice", self.choices)
+        dispatcher.send("Give_Choice", self, choices=self.choices)
 
-    def handle_choice(self, choice: str):
+    def handle_choice(self, sender, choice: str):
         self.address = self.choice_to_address(choice)
         self.run()

@@ -11,11 +11,25 @@ Expected behavior:
 """
 
 
+import logging
+
+import logging518.config
+
+# Config logging before importing submodules
+# Otherwise submodules get empty loggers
+logging518.config.fileConfig("pyproject.toml")
+
 from engine.game import Game
+
+log = logging.getLogger("IFProject")
 
 
 def main():
+    log.info("Welcome to IFProject!")
+    log.info("Loading the game.")
     game = Game()
+
+    log.info("Runing the game loop.")
     game.run()
 
 

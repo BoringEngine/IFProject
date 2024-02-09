@@ -29,8 +29,9 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "story",
     Path().glob("tests/stories/*.yaml"),
+    ids=lambda p: p.name,
 )
-def test_parse_stories(story):
+def test_story(story):
     log.info(f"Parsing story: {str(story)}")
     ast_1 = parse(story)
     ast_2 = parse(dump(ast_1))

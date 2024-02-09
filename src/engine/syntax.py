@@ -18,24 +18,6 @@ NodeType = type[Node]
 NodeTypes = tuple[NodeType]
 
 
-class NodeRef:
-    name: str
-    ...
-
-
-class ExpressionRef(NodeRef):
-    ...
-
-
-class SequenceRef(NodeRef):
-    ...
-
-
-class MapRef(NodeRef):
-    name: str
-    type: str
-
-
 @dataclass
 class Expression(Node):
     data: str
@@ -116,6 +98,11 @@ initial_syntax = Syntax(types=[Expression, Sequence])
 
 
 @dataclass
+class Null(Node):
+    _: None = None
+
+
+@dataclass
 class A(Map):
     spec: Tags = (Tag("a", Expression),)
 
@@ -128,15 +115,16 @@ class If(Map):
         Tag("else", Sequence, optional=True),
     )
 
+
 @dataclass
 class Doc(Map):
-    spec: Tags = (
-        Tag("blocks", Sequence),
-    )
+    spec: Tags = (Tag("blocks", Sequence),)
+
 
 @dataclass
 class Blocks(Sequence):
     pass
+
 
 @dataclass
 class Block(Map):
@@ -145,29 +133,63 @@ class Block(Map):
         Tag("content", Sequence),
     )
 
+
 @dataclass
 class Content(Sequence):
     pass
 
+
+@dataclass
+class Goto(Map):
+    spec: Tags = (Tag("goto", Expression),)
+
+
+@dataclass
+class GoSub(Map):
+    spec: Tags = (Tag("gosub", Expression),)
+
+
+@dataclass
+class Choice(Map):
+    spec: Tags = (
+        Tag("choice", Expression),
+        Tag("effects", Content),
+        Tag("text", Expression, optional=True),
+        # Tags ommited:
+        # Tag("shown_effects", Sequence[ShownEffect], optional=True),
+        # Tag("reusable", Expression, optional=True),
+    )
+
+
 @dataclass
 class Print(Map):
-    spec: Tags = (
-        Tag("print", Expression),
-    )
+    spec: Tags = (Tag("print", Expression),)
+
+
+@dataclass
+class Error(Map):
+    spec: Tags = (Tag("error", Null),)
+
+
+@dataclass
+class Return(Map):
+    spec: Tags = (Tag("return", Null),)
+
 
 @dataclass
 class Variable(Expression):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
+
 @dataclass
 class Text(Expression):
     pattern: str = "[a-zA-Z_]*"
 
-simple_syntax = initial_syntax.extend(If, A, Variable, Doc, Block, Print, Text)
+
+simple_syntax = initial_syntax.extend(
+    If, A, Variable, Doc, Block, Goto, GoSub, Choice, Print, Error, Text, Null, Return
+)
 syntax_v1 = simple_syntax
 
 
-node_class_dict = {
-    "A": A,
-    "print": Print
-}
+node_class_dict = {"A": A, "print": Print}

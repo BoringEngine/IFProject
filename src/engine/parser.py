@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from types import NoneType
 
 import logging518.config
 import yaml
@@ -15,6 +16,7 @@ from engine.syntax import (
     MapType,
     Node,
     NodeType,
+    Null,
     Sequence,
     Syntax,
     syntax_v1,
@@ -111,6 +113,9 @@ class Parser:
             case dict(), None | Map():
                 return self._parse_map(data, node_type)
 
+            case None, Null():
+                return Null()
+
             case _:
                 raise TypeError(f"Data: {data} does not match node {node_type}")
 
@@ -133,6 +138,8 @@ class Parser:
 
     def _dump(self, node: Node) -> PoPo:
         match node:
+            case Null():
+                return None
             case Expression(data):
                 return data
             case Map(data):

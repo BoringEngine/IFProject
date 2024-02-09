@@ -21,7 +21,8 @@ class View:
             print(f"Your choices are: {", ".join(choices.keys())}")
 
             # Get the user's choice
-            choice = input("Please enter a choice or type 'exit' to quit.")
+            choice = input("Please enter a choice or type 'exit' to quit.\n" "=>  ")
+            choice = choice.lower().strip()  # Fix spaces and case
 
             log.debug(f"Received choice: {choice}")
 
@@ -34,6 +35,7 @@ class View:
             elif choice in choices:
                 log.debug(f"Sending Make_Choice signal with choice: {choice}")
                 dispatcher.send("Make_Choice", choice=choice)
+                return
 
             log.debug("Invalid choice, retrying.")
             print("Invalid choice, try again.\n")

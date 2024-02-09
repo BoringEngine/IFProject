@@ -1,6 +1,12 @@
+import logging
 from pathlib import Path
 
+import logging518.config
 import yaml
+
+logging518.config.fileConfig("pyproject.toml")
+log = logging.getLogger("Parser")
+
 
 from engine.exceptions import NotRecognized
 from engine.syntax import (
@@ -15,6 +21,18 @@ from engine.syntax import (
 )
 
 PoPo = str | list | dict
+
+
+def log_parse_start(data, node_type):
+    # Hack to get node name for logging
+    if node_type is None:
+        name = "None"
+    elif node_type is NoneType:
+        name = "NoneType"
+    else:
+        name = node_type.__name__
+    data_string = str(data).strip()[:80]
+    log.debug(f"Parsing {name} node with: {data_string}")
 
 
 class Parser:
@@ -78,6 +96,8 @@ class Parser:
         return result
 
     def _parse(self, data: PoPo, node_type: NodeType) -> Node:
+        log_parse_start(data, node_type)
+
         # Hack to match node types with class patterns
         node_type_instance = node_type({}) if node_type else None
 
@@ -96,8 +116,13 @@ class Parser:
 
     def _parse_map(self, data, node_type: MapType | None) -> Map:
         candidate_nodes = [node_type] if node_type else self.syntax.maps
+        log.debug(
+            f"=> Parse as map. Candidate nodes: {[node.__name__ for node in candidate_nodes]}:"
+        )
+
         for node in candidate_nodes:
             if all(tag.key in data or tag.optional for tag in node.spec):
+                log.debug(f"===> Matched tags for {node.__name__}.")
                 result = {
                     tag.key: self._parse(data[tag.key], tag.type)
                     for tag in node.spec

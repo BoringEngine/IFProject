@@ -116,12 +116,11 @@ stream = "ext://sys.stdout"
 class = "logging.StreamHandler"
 
 [tool.logging.handlers.file]
-filename = "aces.log"
+filename = "IFProject.log"
 formatter = "simple"
-class = "logging.RotatingFileHandler"
-maxBytes = 1_000_000                  # Rotate the log file at 1MB
-backupCount = 1                       # Keep the last rotated log file (Total: 2MB)
+class = "logging.FileHandler"
 
-# Format Attributes: https://docs.python.org/3/library/logging.html#logrecord-attributes
 [tool.logging.formatters.simple]
-format = "%(asctime)s [%(name)][%(levelname)s] %(message)s"
+format = "[%(name)s] %(message)s"
+# Example: [IFProject] Hello, World!
+# Format Reference: https://docs.python.org/3/library/logging.html#logrecord-attributes

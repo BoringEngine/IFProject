@@ -27,7 +27,7 @@ class Game:
             self.interpreter.step()
             step_count += 1
 
-    def handle_exit(self, sender):
+    def handle_exit(self):
         """Handle an Exit_Game event, cleanup and exit the game."""
         logging.debug("Received Exit_Game signal. Exiting game.")
         exit()

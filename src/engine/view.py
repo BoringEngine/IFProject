@@ -11,10 +11,10 @@ class View:
         dispatcher.connect(self.show_choices, signal="Give_Choice")
         log.debug("View initialized.")
 
-    def print_to_console(self, sender, text: str):
+    def print_to_console(self, text: str):
         print(text)
 
-    def show_choices(self, sender, choices: dict[str, bool]):
+    def show_choices(self, choices: dict[str, bool]):
         log.debug(f"Received choices: {choices}")
         while True:
             # Display the choices
@@ -33,7 +33,7 @@ class View:
             # Send valid choices to the interpreter
             elif choice in choices:
                 log.debug(f"Sending Make_Choice signal with choice: {choice}")
-                dispatcher.send("Make_Choice", self, choice)
+                dispatcher.send("Make_Choice", choice=choice)
 
             log.debug("Invalid choice, retrying.")
             print("Invalid choice, try again.\n")

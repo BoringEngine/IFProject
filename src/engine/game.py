@@ -23,9 +23,7 @@ class Game:
         log.debug("Game loop running.")
         step_count = 0
         while True:
-            log.debug(
-                f"============================== Step {step_count}  =============================="
-            )
+            log.debug(f"==================== Step {step_count}  ====================")
             self.interpreter.step()
             step_count += 1
 

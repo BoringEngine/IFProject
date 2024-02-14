@@ -122,7 +122,8 @@ class Parser:
     def _parse_map(self, data, node_type: MapType | None) -> Map:
         candidate_nodes = [node_type] if node_type else self.syntax.maps
         log.debug(
-            f"=> Parse as map. Candidate nodes: {[node.__name__ for node in candidate_nodes]}:"
+            f"=> Parse as map. Candidate nodes: "
+            "{[node.__name__ for node in candidate_nodes]}:"
         )
 
         for node in candidate_nodes:

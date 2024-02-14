@@ -10,7 +10,7 @@ authors = [
     { name = "Kyle Hess", email = "donotreply@github.com" },
 ]
 license.text = "AGPLv3"
-version = "0.0.0"
+version = "0.0.1.pre-3"
 readme = "README.md"
 urls = { Homepage = "https://github.com/maxsu/IFProject" }
 keywords = ["IF", "Interactive Fiction", "PyScript"]

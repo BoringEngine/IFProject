@@ -38,7 +38,7 @@ dependencies = [
     "build",                   # Deploy  Build sdists
     "twine",                   #         Publish package to pypi
     "mkdocstrings-python",     # Docs    Generate mkdocs from docstrings
-    "pydispatch",              # Events  Message passing between objects
+    "pydispatcher",            # Events  Message passing between objects
     "logging518",              # Logging Configure logging using Pyproject.toml
     "ruff",                    # QA      Linting and formatting
     "pytest",                  #         Run test package

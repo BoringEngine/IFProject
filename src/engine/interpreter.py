@@ -12,6 +12,8 @@ class Interpreter:
         # Mock choices: True is a placeholder for Address
         self.choices = {"north": True, "south": True, "east": True, "west": True}
 
+        self.last_choice = None
+
         log.debug("Interpreter initialized.")
 
     def step(self):
@@ -21,5 +23,7 @@ class Interpreter:
         dispatcher.send("Give_Choice", choices=self.choices)
 
     def handle_choice(self, choice: str):
-        ...  # Currently, we don't do anything with the choice
         log.debug(f"Received choice: {choice}")
+
+        # Store the last choice
+        self.last_choice = choice

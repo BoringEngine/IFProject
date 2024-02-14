@@ -1,14 +1,42 @@
 import types
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
+
+from engine.exceptions import BadAddress, BadNode
 
 # Base Nodes ------------------------------------------------------------------
 
 
 class Node:
+    def __getitem__(self, index: str | int):
+        if (type(self.data) != list) and (type(self.data) != dict):
+            raise BadAddress(f"Node {self} has data that is not a list or dict.")
+        if (type(self.data) == list and type(index) != int) or (
+            type(self.data) == dict and type(index) != str
+        ):
+            raise BadAddress(
+                f"Incorrectly indexed into node {self} with key {index} of incorrect type."
+            )
+        try:
+            return self.data[index]
+        except (IndexError, KeyError):
+            raise BadAddress(f"No subnode at index {index} in node {self}.")
+
+    def get_addr(self, address: list[str | int], curr_addr_ind: Optional[int] = 0):
+        if curr_addr_ind + 1 < len(address):
+            return self[address[curr_addr_ind]].get_addr(address, curr_addr_ind + 1)
+        elif curr_addr_ind + 1 == len(address):
+            return self[address[curr_addr_ind]]
+        elif curr_addr_ind == len(address):
+            return self
+
+        raise BadAddress(
+            f"Address index {curr_addr_ind} is greter than the length of the address list {address}."
+        )
+
     @property
     def type(self):
         return self.__class__.__name__
@@ -51,9 +79,6 @@ Tags = list[Tag]
 class Map(Node):
     data: dict
     spec: Tags
-
-    def __getitem__(self, key: str) -> Any:
-        return self.data[key]
 
 
 MapType = type[Map]

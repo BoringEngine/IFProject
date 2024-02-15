@@ -138,19 +138,24 @@ class Parser:
         raise NotRecognized(f"Unrecognized map: {data}")
 
     def _dump(self, node: Node) -> PoPo:
+        data, type = node.data, node.type
         match node:
             case Null():
+                log.debug("Dumping Null node.")
                 return None
-            case Expression(data):
+            case Expression():
+                log.debug(f"Dumping {type} expression: {data}")
                 return data
-            case Map(data):
+            case Map():
+                log.debug(f"Dumping {type} map: {data}")
                 return {k: self._dump(v) for k, v in data.items()}
-            case Sequence(data):
+            case Sequence():
+                log.debug(f"Dumping {type} sequence: {data}")
                 return [self._dump(item) for item in data]
             case Node():
-                raise NotRecognized(f"Unrecognized node: {node}")
+                raise NotRecognized(f"Unrecognized {type} node: {node}")
             case _:
-                raise TypeError(f"Expected Node, got: {type(node)}")
+                raise TypeError(f"Expected Node, got: {node}")
 
 
 # Publish the default parser

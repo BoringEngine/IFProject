@@ -22,7 +22,7 @@ from engine.syntax import (
     syntax_v1,
 )
 
-PoPo = str | list | dict
+PoPo = str | list | dict | None
 
 
 def log_parse_start(data, node_type):

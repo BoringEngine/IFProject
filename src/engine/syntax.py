@@ -11,6 +11,8 @@ from engine.exceptions import BadAddress, BadNode
 
 
 class Node:
+    data: Any
+
     def __getitem__(self, index: str | int):
         if (type(self.data) != list) and (type(self.data) != dict):
             raise BadAddress(f"Node {self} has data that is not a list or dict.")
@@ -124,7 +126,7 @@ initial_syntax = Syntax(types=[Expression, Sequence])
 
 @dataclass
 class Null(Node):
-    _: None = None
+    data: None = None
 
 
 @dataclass

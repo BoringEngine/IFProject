@@ -1,4 +1,5 @@
 from engine.exceptions import *
+from engine.parser import dump, parse
 from engine.syntax import *
 from pytest import fixture, raises
 
@@ -60,6 +61,11 @@ def test_get_item(example_map):
 # Complex Nodes ------------------------------------------------------------
 
 
+Text = Expression
+Id = Expression
+Address = Expression
+
+
 @fixture
 def example_complex_node():
     return Doc(
@@ -68,18 +74,18 @@ def example_complex_node():
                 data=[
                     Block(
                         data={
-                            "name": Expression(data="first_block"),
+                            "name": Id(data="first_block"),
                             "content": Content(
                                 data=[
-                                    Print(data={"print": "hi"}),
-                                    Goto(data={"goto": "/second_block"}),
+                                    Print(data={"print": Text(data="hi")}),
+                                    Goto(data={"goto": Address(data="/second_block")}),
                                 ]
                             ),
                         }
                     ),
                     Block(
                         data={
-                            "name": Expression(data="second_block"),
+                            "name": Id(data="second_block"),
                             "content": Content(
                                 data=[
                                     If(
@@ -87,9 +93,8 @@ def example_complex_node():
                                             "if": Expression(data="pi=3.14"),
                                             "then": Content(
                                                 data=[
-                                                    GoSub(data=None),
-                                                    GoSub(data="None"),
-                                                    Node(),
+                                                    GoSub(data={"gosub": Null()}),
+                                                    GoSub(data={"gosub": Null()}),
                                                     Expression(data="None"),
                                                 ]
                                             ),
@@ -117,7 +122,7 @@ def example_complex_node():
                                     ),
                                     Choice(
                                         data={
-                                            "choice": ";aldkfja;",
+                                            "choice": Text(data=";aldkfja;"),
                                             "effects": Content(data=[]),
                                         }
                                     ),
@@ -129,6 +134,31 @@ def example_complex_node():
             )
         }
     )
+
+
+@fixture
+def complex_node_yaml():
+    return """
+        blocks:
+        - content:
+        - print: hi
+        - goto: /second_block
+        name: first_block
+        - content:
+        - else:
+            - error: null
+            - - - - nested_node
+            if: pi=3.14
+            then:
+            - gosub: null
+            - gosub: null
+            - None
+        - choice: ;aldkfja;
+            effects: []
+        name: second_block
+    """
+def test_dump_complex_node(example_complex_node):
+    dump(example_complex_node)
 
 
 def test_get_valid_complex_indexing(example_complex_node):

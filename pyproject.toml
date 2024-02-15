@@ -62,8 +62,9 @@ requires = ["setuptools", "wheel"]
 # https://packaging.python.org/en/latest/specifications/entry-points/
 
 [project.scripts]
-live = "tools.live:main"   # Liveload the project from /src
-clean = "tools.clean:main" # Clean project build directories
+IFEngine = "engine.main:main" # Run the project
+live = "tools.live:main"      # Liveload the project from /src
+clean = "tools.clean:main"    # Clean project build directories
 
 
 # Code Quality

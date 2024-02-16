@@ -3,6 +3,8 @@ from engine.parser import dump, parse
 from engine.syntax import *
 from pytest import fixture, raises
 
+from tests.cases import Case, cases
+
 # Test Basic Nodes ------------------------------------------------------------
 
 
@@ -42,20 +44,12 @@ def test_empty_sequence():
     assert empty_sequence.data == []
 
 
-def test_simple_sequence_indexing(example_sequence):
-    assert example_sequence[0] == Expression("test")
-
-
 # Map ---------------------------------------------------------------------
 
 
 @fixture
 def example_map():
     return A({"a": Expression("test")})
-
-
-def test_get_item(example_map):
-    assert example_map["a"] == Expression("test")
 
 
 # Complex Nodes ------------------------------------------------------------
@@ -163,43 +157,84 @@ def test_dump_complex_node(example_complex_node):
     dump(example_complex_node)
 
 
-def test_get_valid_complex_indexing(example_complex_node):
-    assert type(example_complex_node["blocks"]) == Content
-    assert type(example_complex_node["blocks"][1]["name"]) == Expression
-    assert example_complex_node["blocks"][0]["content"][0]["print"] == "hi"
+class TestGetItem:
+    ...
 
+    def test_sequence_indexing(self, example_sequence):
+        assert example_sequence[0] == Expression("test")
 
-def test_get_valid_complex_addressing(example_complex_node):
-    assert type(example_complex_node.get_addr([])) == Doc
-    assert type(example_complex_node.get_addr(["blocks"])) == Content
-    assert type(example_complex_node.get_addr(["blocks", 1, "name"])) == Expression
-    assert example_complex_node.get_addr(["blocks", 0, "content", 0, "print"]) == "hi"
-    assert (
-        type(example_complex_node.get_addr(["blocks", 0, "content", 0, "print"], 5))
-        == Doc
+    def test_map_indexing(self, example_map):
+        assert example_map["a"] == Expression("test")
+
+    def test_complex_indexing(self, example_complex_node):
+        assert type(example_complex_node["blocks"]) == Content
+
+    def test_nested_indexing(self, example_complex_node):
+        assert example_complex_node["blocks"][0]["content"][0]["print"] == Text("hi")
+
+    @cases(
+        {
+            "Invalid Map Index": "vars",
+            "Invalid Map Index Not Str": 1,
+        }
     )
-    assert (
-        type(example_complex_node.get_addr(["blocks", 1, "content", 0, "then", 2]))
-        == Node
+    def test_invalid_map_index(self, case, example_map):
+        with raises(BadAddress):
+            example_map[case.val]
+
+    def test_invalid_expression_index(self, example_complex_node):
+        with raises(BadAddress):
+            example_complex_node["blocks"][0]["name"]["data"]
+
+    @cases(
+        {
+            "Invalid Sequence Index Too Big": 1,
+            "Invalid Sequence Index Negative": -1,
+            "Invalid Sequence Index Not Int": "a",
+        }
     )
-    assert example_complex_node.get_addr(
-        ["blocks", 1, "content", 0, "else", 1, 0, 0, 0]
-    ) == Expression("nested_node")
+    def test_invalid_sequence_index(self, case, example_sequence):
+        with raises(BadAddress):
+            example_sequence[case.val]
 
 
-def test_get_address_invalid_key_raises_BadAddress(example_complex_node):
-    with raises(BadAddress):
-        example_complex_node.get_addr(["vars"])
-    with raises(BadAddress):
-        example_complex_node.get_addr(["blocks", 2])
-    with raises(BadAddress):
-        example_complex_node.get_addr(["blocks", "first_block"])
-    with raises(BadAddress):
-        example_complex_node.get_addr(["blocks", 1, "name", "data"])
-    with raises(BadAddress):
-        example_complex_node.get_addr(["blocks", 0, "content", 0, "print"], 6)
-    with raises(BadAddress):
-        example_complex_node.get_addr(["blocks", 0, "content", 0, "print"], 4)
+class TestGetAddr:
+    @cases(
+        {
+            "Empty Address": ([], Doc),
+            "Simple Address": (["blocks"], Content),
+            "Simple Address with Index": (["blocks", 1, "name"], Expression),
+        }
+    )
+    def test_valid_addresses_by_types(self, case, example_complex_node):
+        result = example_complex_node.get_addr(case.val)
+        assert isinstance(result, case.expects)
+
+    @cases(
+        {
+            "Terminal Address": (["blocks", 0, "content", 0, "print"], Text("hi")),
+            "Nested Address": (
+                ["blocks", 1, "content", 0, "else", 1, 0, 0, 0],
+                Expression("nested_node"),
+            ),
+        }
+    )
+    def test_valid_address_by_vals(self, case, example_complex_node):
+        result = example_complex_node.get_addr(case.val)
+        assert result == case.expects
+
+    @cases(
+        {
+            "Required key does not exist": ["vars"],
+            "Sequence index Too Big": ["blocks", 2],
+            "Sequence index Negative": ["blocks", -1],
+            "Sequence index Not Int": ["blocks", "first_block"],
+            "Terminal node has no subnodes": ["blocks", 0, "name", "data"],
+        }
+    )
+    def test_invalid_addresses(self, case, example_complex_node):
+        with raises(BadAddress):
+            example_complex_node.get_addr(case.val)
 
 
 # Simple Syntax ------------------------------------------------------------

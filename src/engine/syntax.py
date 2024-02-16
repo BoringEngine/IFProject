@@ -1,3 +1,4 @@
+import re
 import types
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -13,17 +14,14 @@ from engine.exceptions import BadAddress, BadNode
 class Node:
     data: Any
 
-    def get_addr(self, address: list[str | int], curr_addr_ind: Optional[int] = 0):
-        if curr_addr_ind + 1 < len(address):
-            return self[address[curr_addr_ind]].get_addr(address, curr_addr_ind + 1)
-        elif curr_addr_ind + 1 == len(address):
-            return self[address[curr_addr_ind]]
-        elif curr_addr_ind == len(address):
-            return self
-
-        raise BadAddress(
-            f"Address index {curr_addr_ind} is greter than the length of the address list {address}."
-        )
+    def get_addr(self, address: list[str | int]):
+        match address:
+            case []:
+                return self
+            case [i]:
+                return self[i]
+            case [i, *js]:
+                return self[i].get_addr(js)
 
     @property
     def type(self):
@@ -39,6 +37,10 @@ class Expression(Node):
     data: str
     pattern: str = ".*"
 
+    def __getitem__(self, index: Any = None):
+        if index is not None:
+            raise BadAddress("Terminal {self.type} accessed with index {index}")
+
 
 ExpressionType = type[Expression]
 ExpressionTypes = tuple[ExpressionType]
@@ -51,10 +53,11 @@ class Sequence(Node):
     def __getitem__(self, index: int):
         if not isinstance(index, int):
             raise BadAddress(f"Sequence node requires integer index. Given: {index}.")
-        try:
-            return self.data[index]
-        except (IndexError, KeyError):
+        if index < 0:
+            raise BadAddress(f"Negative index {index} is not allowed.")
+        if index + 1 > len(self.data):
             raise BadAddress(f"No subnode at index {index} in node {self}.")
+        return self.data[index]
 
 
 SequenceType = type[Sequence]
@@ -89,16 +92,19 @@ class Map(Node):
     data: dict
     spec: Spec
 
-    def __getitem__(self, index: str):
-        if (type(self.data) == list and type(index) != int) or (
-            type(self.data) == dict and type(index) != str
-        ):
-            raise BadAddress(f"Map node requires string index. Given: {index}.")
+    def __getitem__(self, key: str):
+        if not isinstance(key, str):
+            raise BadAddress(f"Map node requires string index. Given: {key}.")
 
-        try:
-            return self.data[index]
-        except (IndexError, KeyError):
-            raise BadAddress(f"No subnode at index {index} in node {self}.")
+        if key not in self.spec.keys:
+            raise BadAddress(f"{self.type} node has no {key} key.")
+
+        if key not in self.data:
+            if key in self.spec.optional_keys:
+                return None
+            raise BadNode("{self.type} Map node missing a required key: {key}")
+
+        return self.data[key]
 
 
 MapType = type[Map]

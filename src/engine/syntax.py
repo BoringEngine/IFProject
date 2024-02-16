@@ -13,20 +13,6 @@ from engine.exceptions import BadAddress, BadNode
 class Node:
     data: Any
 
-    def __getitem__(self, index: str | int):
-        if (type(self.data) != list) and (type(self.data) != dict):
-            raise BadAddress(f"Node {self} has data that is not a list or dict.")
-        if (type(self.data) == list and type(index) != int) or (
-            type(self.data) == dict and type(index) != str
-        ):
-            raise BadAddress(
-                f"Incorrectly indexed into node {self} with key {index} of incorrect type."
-            )
-        try:
-            return self.data[index]
-        except (IndexError, KeyError):
-            raise BadAddress(f"No subnode at index {index} in node {self}.")
-
     def get_addr(self, address: list[str | int], curr_addr_ind: Optional[int] = 0):
         if curr_addr_ind + 1 < len(address):
             return self[address[curr_addr_ind]].get_addr(address, curr_addr_ind + 1)
@@ -62,6 +48,14 @@ ExpressionTypes = tuple[ExpressionType]
 class Sequence(Node):
     data: list
 
+    def __getitem__(self, index: int):
+        if not isinstance(index, int):
+            raise BadAddress(f"Sequence node requires integer index. Given: {index}.")
+        try:
+            return self.data[index]
+        except (IndexError, KeyError):
+            raise BadAddress(f"No subnode at index {index} in node {self}.")
+
 
 SequenceType = type[Sequence]
 SequenceTypes = tuple[SequenceType]
@@ -81,6 +75,17 @@ Tags = list[Tag]
 class Map(Node):
     data: dict
     spec: Tags
+
+    def __getitem__(self, index: str):
+        if (type(self.data) == list and type(index) != int) or (
+            type(self.data) == dict and type(index) != str
+        ):
+            raise BadAddress(f"Map node requires string index. Given: {index}.")
+
+        try:
+            return self.data[index]
+        except (IndexError, KeyError):
+            raise BadAddress(f"No subnode at index {index} in node {self}.")
 
 
 MapType = type[Map]

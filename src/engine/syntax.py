@@ -17,8 +17,14 @@ class Node:
     def get_addr(self, address: list[str | int]):
         current_node = self
 
-        for addr in address:
-            current_node = current_node[addr]
+        for index, addr in enumerate(address):
+            try:
+                current_node = current_node[addr]
+            except Exception as e:
+                raise BadAddress(
+                    f"Error at address position {index}"
+                    f" (value {addr}) in {address}: {e}"
+                )
 
         return current_node
 

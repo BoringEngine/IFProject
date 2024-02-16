@@ -68,13 +68,26 @@ class Tag:
     optional: bool = False
 
 
-Tags = list[Tag]
+class Spec:
+    tags: list[Tag]
+
+    def __init__(self, *tags):
+        self.tags = tags
+        self.compile()
+
+    def compile(self):
+        self.keys = [tag.key for tag in self.tags]
+        self.required_keys = [tag.key for tag in self.tags if not tag.optional]
+        self.optional_keys = [tag.key for tag in self.tags if not tag.optional]
+
+    def __iter__(self):
+        return iter(self.tags)
 
 
 @dataclass
 class Map(Node):
     data: dict
-    spec: Tags
+    spec: Spec
 
     def __getitem__(self, index: str):
         if (type(self.data) == list and type(index) != int) or (
@@ -136,12 +149,14 @@ class Null(Node):
 
 @dataclass
 class A(Map):
-    spec: Tags = (Tag("a", Expression),)
+    spec: Spec = Spec(
+        Tag("a", Expression),
+    )
 
 
 @dataclass
 class If(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("if", Expression),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
@@ -150,7 +165,9 @@ class If(Map):
 
 @dataclass
 class Doc(Map):
-    spec: Tags = (Tag("blocks", Sequence),)
+    spec: Spec = Spec(
+        Tag("blocks", Sequence),
+    )
 
 
 @dataclass
@@ -160,7 +177,7 @@ class Blocks(Sequence):
 
 @dataclass
 class Block(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("name", Expression),
         Tag("content", Sequence),
     )
@@ -173,17 +190,21 @@ class Content(Sequence):
 
 @dataclass
 class Goto(Map):
-    spec: Tags = (Tag("goto", Expression),)
+    spec: Spec = Spec(
+        Tag("goto", Expression),
+    )
 
 
 @dataclass
 class GoSub(Map):
-    spec: Tags = (Tag("gosub", Expression),)
+    spec: Spec = Spec(
+        Tag("gosub", Expression),
+    )
 
 
 @dataclass
 class Choice(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("choice", Expression),
         Tag("effects", Content),
         Tag("text", Expression, optional=True),
@@ -195,17 +216,23 @@ class Choice(Map):
 
 @dataclass
 class Print(Map):
-    spec: Tags = (Tag("print", Expression),)
+    spec: Spec = Spec(
+        Tag("print", Expression),
+    )
 
 
 @dataclass
 class Error(Map):
-    spec: Tags = (Tag("error", Null),)
+    spec: Spec = Spec(
+        Tag("error", Null),
+    )
 
 
 @dataclass
 class Return(Map):
-    spec: Tags = (Tag("return", Null),)
+    spec: Spec = Spec(
+        Tag("return", Null),
+    )
 
 
 @dataclass

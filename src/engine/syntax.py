@@ -192,7 +192,20 @@ class Text(Expression):
 
 
 simple_syntax = initial_syntax.extend(
-    If, A, Variable, Doc, Block, Goto, GoSub, Choice, Print, Error, Text, Null, Return, Wait
+    If,
+    A,
+    Variable,
+    Doc,
+    Block,
+    Goto,
+    GoSub,
+    Choice,
+    Print,
+    Error,
+    Text,
+    Null,
+    Return,
+    Wait,
 )
 syntax_v1 = simple_syntax
 

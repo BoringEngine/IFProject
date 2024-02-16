@@ -12,7 +12,7 @@ class MyTestCase:
 def test_cases():
     class a_obj(MyTestCase):
         val = "a: action"
-        expects = A(data={"a": Expression(data="action")})
+        expects = A({"a": Expression("action")})
 
     class if_obj(MyTestCase):
         val = """
@@ -24,15 +24,15 @@ def test_cases():
     """
         expects = If(
             {
-                "if": Expression(data="condition1"),
+                "if": Expression("condition1"),
                 "then": Sequence(
                     [
-                        A(data={"a": Expression(data="action1")}),
+                        A({"a": Expression("action1")}),
                     ]
                 ),
                 "else": Sequence(
                     [
-                        A(data={"a": Expression(data="action2")}),
+                        A({"a": Expression("action2")}),
                     ]
                 ),
             }

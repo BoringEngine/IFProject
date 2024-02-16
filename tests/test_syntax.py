@@ -21,7 +21,7 @@ def test_type_property(example_node):
 
 @fixture
 def example_expression():
-    return Expression(data="test")
+    return Expression("test")
 
 
 def test_initialization(example_expression):
@@ -34,7 +34,7 @@ def test_initialization(example_expression):
 
 @fixture
 def example_sequence():
-    return Content(data=[Expression(data="test")])
+    return Content([Expression("test")])
 
 
 def test_empty_sequence():
@@ -43,7 +43,7 @@ def test_empty_sequence():
 
 
 def test_simple_sequence_indexing(example_sequence):
-    assert example_sequence[0] == Expression(data="test")
+    assert example_sequence[0] == Expression("test")
 
 
 # Map ---------------------------------------------------------------------
@@ -51,11 +51,11 @@ def test_simple_sequence_indexing(example_sequence):
 
 @fixture
 def example_map():
-    return A(data={"a": Expression(data="test")})
+    return A({"a": Expression("test")})
 
 
 def test_get_item(example_map):
-    assert example_map["a"] == Expression(data="test")
+    assert example_map["a"] == Expression("test")
 
 
 # Complex Nodes ------------------------------------------------------------
@@ -69,46 +69,46 @@ Address = Expression
 @fixture
 def example_complex_node():
     return Doc(
-        data={
+        {
             "blocks": Content(
-                data=[
+                [
                     Block(
-                        data={
-                            "name": Id(data="first_block"),
+                        {
+                            "name": Id("first_block"),
                             "content": Content(
-                                data=[
-                                    Print(data={"print": Text(data="hi")}),
-                                    Goto(data={"goto": Address(data="/second_block")}),
+                                [
+                                    Print({"print": Text("hi")}),
+                                    Goto({"goto": Address("/second_block")}),
                                 ]
                             ),
                         }
                     ),
                     Block(
-                        data={
-                            "name": Id(data="second_block"),
+                        {
+                            "name": Id("second_block"),
                             "content": Content(
-                                data=[
+                                [
                                     If(
-                                        data={
-                                            "if": Expression(data="pi=3.14"),
+                                        {
+                                            "if": Expression("pi=3.14"),
                                             "then": Content(
-                                                data=[
-                                                    GoSub(data={"gosub": Null()}),
-                                                    GoSub(data={"gosub": Null()}),
-                                                    Expression(data="None"),
+                                                [
+                                                    GoSub({"gosub": Address("home")}),
+                                                    GoSub({"gosub": Address("sleep")}),
+                                                    Expression("days += 1"),
                                                 ]
                                             ),
                                             "else": Content(
-                                                data=[
-                                                    Error(data={"error": Null()}),
+                                                [
+                                                    Error({"error": Null()}),
                                                     Content(
-                                                        data=[
+                                                        [
                                                             Content(
-                                                                data=[
+                                                                [
                                                                     Content(
-                                                                        data=[
+                                                                        [
                                                                             Expression(
-                                                                                data="nested_node"
+                                                                                "nested_node"
                                                                             )
                                                                         ]
                                                                     )
@@ -121,9 +121,9 @@ def example_complex_node():
                                         }
                                     ),
                                     Choice(
-                                        data={
-                                            "choice": Text(data=";aldkfja;"),
-                                            "effects": Content(data=[]),
+                                        {
+                                            "choice": Text(";aldkfja;"),
+                                            "effects": Content([]),
                                         }
                                     ),
                                 ]
@@ -157,6 +157,8 @@ def complex_node_yaml():
             effects: []
         name: second_block
     """
+
+
 def test_dump_complex_node(example_complex_node):
     dump(example_complex_node)
 
@@ -182,7 +184,7 @@ def test_get_valid_complex_addressing(example_complex_node):
     )
     assert example_complex_node.get_addr(
         ["blocks", 1, "content", 0, "else", 1, 0, 0, 0]
-    ) == Expression(data="nested_node")
+    ) == Expression("nested_node")
 
 
 def test_get_address_invalid_key_raises_BadAddress(example_complex_node):
@@ -218,7 +220,7 @@ def test_simple_syntax_extension():
 
 
 def test_pattern():
-    var = Variable(data="var")
+    var = Variable("var")
     assert var.pattern == "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
 

@@ -15,11 +15,12 @@ class Node:
     data: Any
 
     def get_addr(self, address: list[str | int]):
-        match address:
-            case []:
-                return self
-            case [i, *js]:
-                return self[i].get_addr(js)
+        current_node = self
+
+        for addr in address:
+            current_node = current_node[addr]
+
+        return current_node
 
     @property
     def type(self):

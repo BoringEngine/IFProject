@@ -1,0 +1,31 @@
+---
+blocks:
+  - name: start
+    start: true
+    content:
+      - print: |
+          This is the start of the program.
+      - choice: continue
+        text: Continue
+        effects:
+          - print: |
+              You chose to continue.
+      - choice: goto
+        text: Go somewhere else
+        effects:
+          - print: |
+              You chose to go to the other block.
+          - goto: /other_block
+      - wait:
+      - print: |
+          You have continued. This should not appear until after you've made a choice.
+      - print: |
+          You should now only be presented with the 'Go somewhere else' choice.
+      - wait:
+      - error:
+  - name: other_block
+    content:
+      - print: |
+          You are in the other block.
+      - print: |
+          This is the end of the story.

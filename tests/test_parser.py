@@ -1,60 +1,55 @@
+from typing import NamedTuple
+
 import pytest
-from engine.parser import Parser
+from engine.parser import dump, parse
 from engine.syntax import A, Expression, If, Node, Sequence
 
 
-class MyTestCase:
+class Case(NamedTuple):
+    name: str
     val: str
-    expected: Node
+    expects: Node
 
 
-@pytest.fixture
-def test_cases():
-    class a_obj(MyTestCase):
-        val = "a: action"
-        expects = A({"a": Expression("action")})
-
-    class if_obj(MyTestCase):
-        val = """
-    if: condition1
-    then:
-    - a: action1
-    else:
-    - a: action2
-    """
-        expects = If(
-            {
-                "if": Expression("condition1"),
-                "then": Sequence(
-                    [
-                        A({"a": Expression("action1")}),
-                    ]
-                ),
-                "else": Sequence(
-                    [
-                        A({"a": Expression("action2")}),
-                    ]
-                ),
-            }
-        )
-
-    return [a_obj, if_obj]
+test_cases = pytest.mark.parametrize(
+    "case",
+    [
+        Case(
+            name="A Node",
+            val="a: action",
+            expects=A({"a": Expression("action")}),
+        ),
+        Case(
+            name="If Node",
+            val="""
+                if: condition1
+                then:
+                - a: action1
+                else:
+                - a: action2
+            """,
+            expects=If(
+                {
+                    "if": Expression("condition1"),
+                    "then": Sequence([A({"a": Expression("action1")})]),
+                    "else": Sequence([A({"a": Expression("action2")})]),
+                }
+            ),
+        ),
+    ],
+    ids=lambda case: case.name,
+)
 
 
-@pytest.fixture
-def parser():
-    return Parser()
+@test_cases
+def test_parse(case):
+    node = parse(case.val)
+    assert node == case.expects
 
 
-def test_parse(test_cases, parser):
-    for case in test_cases:
-        node = parser.parse(case.val)
-        assert node == case.expects
+@test_cases
+def test_dump(case):
+    yaml = dump(case.expects)
+    node = parse(yaml)
 
-
-def test_dump(test_cases, parser):
-    for case in test_cases:
-        yaml = parser.dump(case.expects)
-        node = parser.parse(yaml)
-
-        assert node == case.expects
+    assert node == case.expects

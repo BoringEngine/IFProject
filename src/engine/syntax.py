@@ -18,8 +18,6 @@ class Node:
         match address:
             case []:
                 return self
-            case [i]:
-                return self[i]
             case [i, *js]:
                 return self[i].get_addr(js)
 

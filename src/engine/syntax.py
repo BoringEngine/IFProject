@@ -177,6 +177,11 @@ class Return(Map):
 
 
 @dataclass
+class Wait(Map):
+    spec: Tags = (Tag("wait", Null),)
+
+
+@dataclass
 class Variable(Expression):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
@@ -187,9 +192,22 @@ class Text(Expression):
 
 
 simple_syntax = initial_syntax.extend(
-    If, A, Variable, Doc, Block, Goto, GoSub, Choice, Print, Error, Text, Null, Return
+    If,
+    A,
+    Variable,
+    Doc,
+    Block,
+    Goto,
+    GoSub,
+    Choice,
+    Print,
+    Error,
+    Text,
+    Null,
+    Return,
+    Wait,
 )
 syntax_v1 = simple_syntax
 
 
-node_class_dict = {"A": A, "print": Print}
+node_class_dict = {"A": A, "print": Print, "wait": Wait}

@@ -44,6 +44,7 @@ dependencies = [
     "pytest",                  #         Run test package
     "coverage",                #         Compute test coverage
     "mypy",                    #         Static type checking
+    "types-PyYAML",            #         Mypy type stubs for PyYAML
     "autohooks",               #         Git hooks
     "autohooks-plugin-ruff",   #         Ruff git hook
     "autohooks-plugin-pytest", #         Pytest git hook
@@ -97,7 +98,8 @@ select = [ # Rules: https://docs.astral.sh/ruff/rules/
 
 # Commit Hooks: https://greenbone.github.io/autohooks/configuration.html
 [tool.autohooks]
-pre-commit = ["ruff", "pytest", "mypy"]
+mode = "pythonpath"
+pre-commit = ["autohooks.plugins.mypy", "autohooks.plugins.pytest", "autohooks.plugins.ruff"]
 
 
 # Logging

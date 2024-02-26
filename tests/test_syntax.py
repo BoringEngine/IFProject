@@ -1,7 +1,15 @@
-from engine.exceptions import *
-from engine.parser import dump, parse
-from engine.syntax import *
-from pytest import fixture, raises
+from engine.syntax import (
+    A,
+    If,
+    Node,
+    Sequence,
+    Value,
+    Variable,
+    empty_syntax,
+    simple_syntax,
+    syntax_v1,
+)
+from pytest import fixture
 
 from tests.cases import Case, cases
 
@@ -23,7 +31,7 @@ def test_type_property(example_node):
 
 @fixture
 def example_expression():
-    return Expression("test")
+    return Value(data="test")
 
 
 def test_initialization(example_expression):
@@ -49,10 +57,11 @@ def test_empty_sequence():
 
 @fixture
 def example_map():
-    return A({"a": Expression("test")})
+    return A(data={"a": Value(data="test")})
 
 
-# Complex Nodes ------------------------------------------------------------
+def test_get_item(example_map):
+    assert example_map["a"] == Value(data="test")
 
 
 Text = Expression

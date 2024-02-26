@@ -1,6 +1,7 @@
 import re
 import types
 from dataclasses import dataclass, replace
+from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
@@ -9,6 +10,19 @@ import yaml
 from engine.exceptions import BadAddress, BadNode
 
 # Base Nodes ------------------------------------------------------------------
+
+
+class Nodes(Enum):
+    BLOCK = "Block"
+    BLOCKS = "Blocks"
+    GOTO = "Goto"
+    GOSUB = "GoSub"
+    CHOICE = "Choice"
+    PRINT = "Print"
+    ERROR = "Error"
+    RETURN = "Return"
+    WAIT = "Wait"
+    STUFF = "Content"
 
 
 class Node:
@@ -33,12 +47,11 @@ class Node:
         return self.__class__.__name__
 
 
-NodeType = type[Node]
-NodeTypes = tuple[NodeType, ...]
+NodeTuple = tuple[Nodes, ...]
 
 
 @dataclass
-class Expression(Node):
+class Value(Node):
     data: str
     pattern: str = ".*"
 
@@ -46,15 +59,10 @@ class Expression(Node):
         if index is not None:
             raise BadAddress("Terminal {self.type} accessed with index {index}")
 
-
-ExpressionType = type[Expression]
-ExpressionTypes = tuple[ExpressionType, ...]
-
-
 @dataclass
 class Sequence(Node):
     data: list
-    list_of: NodeType = Node
+    list_of: Nodes | Nodes = Node
 
     def __getitem__(self, index: int):
         if not isinstance(index, int):
@@ -65,15 +73,10 @@ class Sequence(Node):
             raise BadAddress(f"No subnode at index {index} in node {self}.")
         return self.data[index]
 
-
-SequenceType = type[Sequence]
-SequenceTypes = tuple[SequenceType, ...]
-
-
 @dataclass
 class Tag:
     key: str
-    type: NodeType
+    type: Nodes | str
     optional: bool = False
 
 
@@ -113,46 +116,38 @@ class Map(Node):
         return self.data[key]
 
 
-MapType = type[Map]
-MapTypes = tuple[MapType]
-
-
 # Syntax ----------------------------------------------------------------------
 
 
 @dataclass
 class Syntax:
-    types: NodeTypes
+    """A repository of node types. Provides methods to query and extend the syntax."""
+
+    types: NodeTuple
 
     @property
-    def expressions(self) -> ExpressionTypes:
-        return self.by_type(Expression)
+    def expressions(self) -> NodeTuple:
+        return self.by_type(Value)
 
     @property
-    def sequences(self) -> SequenceTypes:
+    def sequences(self) -> NodeTuple:
         return self.by_type(Sequence)
 
     @property
-    def maps(self) -> MapTypes:
+    def maps(self) -> NodeTuple:
         return self.by_type(Map)
 
-    @overload
-    def by_type(self, target_type: ExpressionType) -> ExpressionTypes:
-        ...
-
-    @overload
-    def by_type(self, target_type: MapType) -> MapTypes:
-        ...
-
-    @overload
-    def by_type(self, target_type: SequenceType) -> SequenceTypes:
-        ...
-
-    def by_type(self, target_type: NodeType) -> NodeTypes:
+    def by_type(self, target_type: Nodes) -> NodeTuple:
         return tuple(t for t in self.types if issubclass(t, target_type))
 
-    def extend(self, *new_types: NodeType) -> "Syntax":
+    def extend(self, *new_types: Nodes) -> "Syntax":
         return replace(self, types=tuple([*self.types, *new_types]))
+
+    def __getitem__(self, key: str) -> Nodes:
+        for t in self.types:
+            if t.__name__ == key:
+                return t
+        raise KeyError(f"Type {key} not found in syntax")
 
 
 # Initial syntax --------------------------------------------------------------
@@ -160,7 +155,7 @@ class Syntax:
 
 empty_syntax = Syntax(types=())
 
-initial_syntax = Syntax(types=(Expression, Sequence))
+initial_syntax = Syntax(types=(Value, Sequence))
 
 
 # Basic Syntax ----------------------------------------------------------------
@@ -173,15 +168,13 @@ class Null(Node):
 
 @dataclass
 class A(Map):
-    spec: Spec = Spec(
-        Tag("a", Expression),
-    )
+    spec: Tags = (Tag("a", Value),)
 
 
 @dataclass
 class If(Map):
-    spec: Spec = Spec(
-        Tag("if", Expression),
+    spec: Tags = (
+        Tag("if", Value),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
     )
@@ -204,34 +197,34 @@ class Block(Map):
 
 @dataclass
 class Blocks(Sequence):
-    list_of: NodeType = Block
+    list_of: Nodes = Nodes.BLOCK
 
 
 @dataclass
-class Content(Sequence):
-    pass
+class Block(Map):
+    spec: Tags = (
+        Tag("name", Value),
+        Tag("content", Nodes.STUFF, optional=True),
+        Tag("blocks", Nodes.BLOCKS, optional=True),
+    )
 
 
 @dataclass
 class Goto(Map):
-    spec: Spec = Spec(
-        Tag("goto", Expression),
-    )
+    spec: Tags = (Tag("goto", Value),)
 
 
 @dataclass
 class GoSub(Map):
-    spec: Spec = Spec(
-        Tag("gosub", Expression),
-    )
+    spec: Tags = (Tag("gosub", Value),)
 
 
 @dataclass
 class Choice(Map):
-    spec: Spec = Spec(
-        Tag("choice", Expression),
-        Tag("effects", Content),
-        Tag("text", Expression, optional=True),
+    spec: Tags = (
+        Tag("choice", Value),
+        Tag("effects", Stuff),
+        Tag("text", Value, optional=True),
         # Tags ommited:
         # Tag("shown_effects", Sequence[ShownEffect], optional=True),
         # Tag("reusable", Expression, optional=True),
@@ -240,9 +233,7 @@ class Choice(Map):
 
 @dataclass
 class Print(Map):
-    spec: Spec = Spec(
-        Tag("print", Expression),
-    )
+    spec: Tags = (Tag("print", Value),)
 
 
 @dataclass
@@ -267,12 +258,12 @@ class Wait(Map):
 
 
 @dataclass
-class Variable(Expression):
+class Variable(Value):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
 
 @dataclass
-class Text(Expression):
+class Text(Value):
     pattern: str = "[a-zA-Z_]*"
 
 

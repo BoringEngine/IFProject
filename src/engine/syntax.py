@@ -248,7 +248,9 @@ class Return(Map):
 
 @dataclass
 class Wait(Map):
-    spec: Tags = (Tag("wait", Null),)
+    spec: Spec = Spec(
+        Tag("wait", Null),
+    )
 
 
 @dataclass

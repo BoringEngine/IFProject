@@ -17,22 +17,18 @@
 TODO: One for erroneous stories to test "error handling" without a complete crash
 """
 
-import logging
 from pathlib import Path
 
 import pytest
 from engine.parser import dump, parse
 
-log = logging.getLogger(__name__)
+from tests.cases import Case, cases
+
+TEST_FILES = Path("tests/stories").glob("*.yaml")
 
 
-@pytest.mark.parametrize(
-    "story",
-    Path().glob("tests/stories/*.yaml"),
-    ids=lambda p: p.name,
-)
-def test_story(story):
-    log.info(f"Parsing story: {str(story)}")
-    ast_1 = parse(story)
+@cases(*[Case(file.name, file) for file in TEST_FILES])
+def test_story(case):
+    ast_1 = parse(case.val)
     ast_2 = parse(dump(ast_1))
     assert ast_1 == ast_2

@@ -1,14 +1,33 @@
+import re
 import types
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
+
+from engine.exceptions import BadAddress, BadNode
 
 # Base Nodes ------------------------------------------------------------------
 
 
 class Node:
+    data: Any
+
+    def get_addr(self, address: list[str | int]):
+        current_node = self
+
+        for index, addr in enumerate(address):
+            try:
+                current_node = current_node[addr]
+            except Exception as e:
+                raise BadAddress(
+                    f"Error at address position {index}"
+                    f" (value {addr}) in {address}: {e}"
+                )
+
+        return current_node
+
     @property
     def type(self):
         return self.__class__.__name__
@@ -23,6 +42,10 @@ class Expression(Node):
     data: str
     pattern: str = ".*"
 
+    def __getitem__(self, index: Any = None):
+        if index is not None:
+            raise BadAddress("Terminal {self.type} accessed with index {index}")
+
 
 ExpressionType = type[Expression]
 ExpressionTypes = tuple[ExpressionType]
@@ -31,6 +54,15 @@ ExpressionTypes = tuple[ExpressionType]
 @dataclass
 class Sequence(Node):
     data: list
+
+    def __getitem__(self, index: int):
+        if not isinstance(index, int):
+            raise BadAddress(f"Sequence node requires integer index. Given: {index}.")
+        if index < 0:
+            raise BadAddress(f"Negative index {index} is not allowed.")
+        if index + 1 > len(self.data):
+            raise BadAddress(f"No subnode at index {index} in node {self}.")
+        return self.data[index]
 
 
 SequenceType = type[Sequence]
@@ -44,15 +76,39 @@ class Tag:
     optional: bool = False
 
 
-Tags = list[Tag]
+class Spec:
+    tags: list[Tag]
+
+    def __init__(self, *tags):
+        self.tags = tags
+        self.compile()
+
+    def compile(self):
+        self.keys = [tag.key for tag in self.tags]
+        self.required_keys = [tag.key for tag in self.tags if not tag.optional]
+        self.optional_keys = [tag.key for tag in self.tags if not tag.optional]
+
+    def __iter__(self):
+        return iter(self.tags)
 
 
 @dataclass
 class Map(Node):
     data: dict
-    spec: Tags
+    spec: Spec
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str):
+        if not isinstance(key, str):
+            raise BadAddress(f"Map node requires string index. Given: {key}.")
+
+        if key not in self.spec.keys:
+            raise BadAddress(f"{self.type} node has no {key} key.")
+
+        if key not in self.data:
+            if key in self.spec.optional_keys:
+                return None
+            raise BadNode("{self.type} Map node missing a required key: {key}")
+
         return self.data[key]
 
 
@@ -99,17 +155,19 @@ initial_syntax = Syntax(types=[Expression, Sequence])
 
 @dataclass
 class Null(Node):
-    _: None = None
+    data: None = None
 
 
 @dataclass
 class A(Map):
-    spec: Tags = (Tag("a", Expression),)
+    spec: Spec = Spec(
+        Tag("a", Expression),
+    )
 
 
 @dataclass
 class If(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("if", Expression),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
@@ -118,7 +176,9 @@ class If(Map):
 
 @dataclass
 class Doc(Map):
-    spec: Tags = (Tag("blocks", Sequence),)
+    spec: Spec = Spec(
+        Tag("blocks", Sequence),
+    )
 
 
 @dataclass
@@ -128,7 +188,7 @@ class Blocks(Sequence):
 
 @dataclass
 class Block(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("name", Expression),
         Tag("content", Sequence),
     )
@@ -141,17 +201,21 @@ class Content(Sequence):
 
 @dataclass
 class Goto(Map):
-    spec: Tags = (Tag("goto", Expression),)
+    spec: Spec = Spec(
+        Tag("goto", Expression),
+    )
 
 
 @dataclass
 class GoSub(Map):
-    spec: Tags = (Tag("gosub", Expression),)
+    spec: Spec = Spec(
+        Tag("gosub", Expression),
+    )
 
 
 @dataclass
 class Choice(Map):
-    spec: Tags = (
+    spec: Spec = Spec(
         Tag("choice", Expression),
         Tag("effects", Content),
         Tag("text", Expression, optional=True),
@@ -163,22 +227,30 @@ class Choice(Map):
 
 @dataclass
 class Print(Map):
-    spec: Tags = (Tag("print", Expression),)
+    spec: Spec = Spec(
+        Tag("print", Expression),
+    )
 
 
 @dataclass
 class Error(Map):
-    spec: Tags = (Tag("error", Null),)
+    spec: Spec = Spec(
+        Tag("error", Null),
+    )
 
 
 @dataclass
 class Return(Map):
-    spec: Tags = (Tag("return", Null),)
+    spec: Spec = Spec(
+        Tag("return", Null),
+    )
 
 
 @dataclass
 class Wait(Map):
-    spec: Tags = (Tag("wait", Null),)
+    spec: Spec = Spec(
+        Tag("wait", Null),
+    )
 
 
 @dataclass

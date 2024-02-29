@@ -173,10 +173,8 @@ class TestGetItem:
         assert example_complex_node["blocks"][0]["content"][0]["print"] == Text("hi")
 
     @cases(
-        {
-            "Invalid Map Index": "vars",
-            "Invalid Map Index Not Str": 1,
-        }
+        Case("Invalid Map Index", "vars"),
+        Case("Invalid Map Index Not Str", 1),
     )
     def test_invalid_map_index(self, case, example_map):
         with raises(BadAddress):
@@ -187,11 +185,9 @@ class TestGetItem:
             example_complex_node["blocks"][0]["name"]["data"]
 
     @cases(
-        {
-            "Invalid Sequence Index Too Big": 1,
-            "Invalid Sequence Index Negative": -1,
-            "Invalid Sequence Index Not Int": "a",
-        }
+        Case("Invalid Sequence Index Too Big", 1),
+        Case("Invalid Sequence Index Negative", -1),
+        Case("Invalid Sequence Index Not Int", "a"),
     )
     def test_invalid_sequence_index(self, case, example_sequence):
         with raises(BadAddress):
@@ -200,37 +196,32 @@ class TestGetItem:
 
 class TestGetAddr:
     @cases(
-        {
-            "Empty Address": ([], Doc),
-            "Simple Address": (["blocks"], Content),
-            "Simple Address with Index": (["blocks", 1, "name"], Expression),
-        }
+        Case("Empty Address", [], Doc),
+        Case("Simple Address", ["blocks"], Content),
+        Case("Simple Address with Index", ["blocks", 1, "name"], Expression),
     )
     def test_valid_addresses_by_types(self, case, example_complex_node):
         result = example_complex_node.get_addr(case.val)
         assert isinstance(result, case.expects)
 
     @cases(
-        {
-            "Terminal Address": (["blocks", 0, "content", 0, "print"], Text("hi")),
-            "Nested Address": (
-                ["blocks", 1, "content", 0, "else", 1, 0, 0, 0],
-                Expression("nested_node"),
-            ),
-        }
+        Case("Terminal Address", ["blocks", 0, "content", 0, "print"], Text("hi")),
+        Case(
+            "Nested Address",
+            ["blocks", 1, "content", 0, "else", 1, 0, 0, 0],
+            Expression("nested_node"),
+        ),
     )
     def test_valid_address_by_vals(self, case, example_complex_node):
         result = example_complex_node.get_addr(case.val)
         assert result == case.expects
 
     @cases(
-        {
-            "Required key does not exist": ["vars"],
-            "Sequence index Too Big": ["blocks", 2],
-            "Sequence index Negative": ["blocks", -1],
-            "Sequence index Not Int": ["blocks", "first_block"],
-            "Terminal node has no subnodes": ["blocks", 0, "name", "data"],
-        }
+        Case("Required key does not exist", ["vars"]),
+        Case("Sequence index Too Big", ["blocks", 2]),
+        Case("Sequence index Negative", ["blocks", -1]),
+        Case("Sequence index Not Int", ["blocks", "first_block"]),
+        Case("Terminal node has no subnodes", ["blocks", 0, "name", "data"]),
     )
     def test_invalid_addresses(self, case, example_complex_node):
         with raises(BadAddress):

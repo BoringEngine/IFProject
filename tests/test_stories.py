@@ -22,12 +22,12 @@ from pathlib import Path
 import pytest
 from engine.parser import dump, parse
 
-from tests.cases import cases
+from tests.cases import Case, cases
 
 TEST_FILES = Path("tests/stories").glob("*.yaml")
 
 
-@cases({file.name: file for file in TEST_FILES})
+@cases(*[Case(file.name, file) for file in TEST_FILES])
 def test_story(case):
     ast_1 = parse(case.val)
     ast_2 = parse(dump(ast_1))

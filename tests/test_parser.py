@@ -4,9 +4,9 @@ import pytest
 from engine.parser import dump, parse
 from engine.syntax import A, Expression, If, Node, Sequence
 
-from .cases import Case, case_list
+from .cases import Case, cases
 
-sample_node_cases = case_list(
+sample_node_cases = cases(
     Case(
         name="A Node",
         val="a: action",

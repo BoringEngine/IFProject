@@ -29,10 +29,13 @@ jobs:
 
       - name: Test package
         run: |
+          pytest --version
+          coverage --version
           coverage run --source=src/engine -m pytest
           coverage report
 
       - name: Lint package
         run: |
+          ruff --version
           ruff format --check  # check formatting
           ruff check --no-fix  # check linting

@@ -4,8 +4,7 @@ from engine.interpreter import Visitor
 from engine.parser import parser
 
 
-class Renderer:
-    ...
+class Renderer: ...
 
 
 def main():

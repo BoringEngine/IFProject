@@ -10,7 +10,6 @@ Expected behavior:
     - The game exits on "exit"
 """
 
-
 import logging
 
 import logging518.config

@@ -11,11 +11,11 @@ from tests.cases import Case, cases
 # Node
 @fixture
 def example_node():
-    return Node()
+    return A({"a": "test"})
 
 
 def test_type_property(example_node):
-    assert example_node.type == "Node"
+    assert example_node.type == "A"
 
 
 # Expression --------------------------------------------------------------

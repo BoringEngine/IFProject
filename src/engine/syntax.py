@@ -34,7 +34,7 @@ class Node:
 
 
 NodeType = type[Node]
-NodeTypes = tuple[NodeType]
+NodeTypes = tuple[NodeType, ...]
 
 
 @dataclass
@@ -48,12 +48,13 @@ class Expression(Node):
 
 
 ExpressionType = type[Expression]
-ExpressionTypes = tuple[ExpressionType]
+ExpressionTypes = tuple[ExpressionType, ...]
 
 
 @dataclass
 class Sequence(Node):
     data: list
+    list_of: NodeType = Node
 
     def __getitem__(self, index: int):
         if not isinstance(index, int):
@@ -66,13 +67,13 @@ class Sequence(Node):
 
 
 SequenceType = type[Sequence]
-SequenceTypes = tuple[SequenceType]
+SequenceTypes = tuple[SequenceType, ...]
 
 
 @dataclass
 class Tag:
     key: str
-    type: Node
+    type: NodeType
     optional: bool = False
 
 
@@ -135,19 +136,31 @@ class Syntax:
     def maps(self) -> MapTypes:
         return self.by_type(Map)
 
-    def by_type(self, target_type: NodeType) -> NodeTypes:
-        return [t for t in self.types if issubclass(t, target_type)]
+    @overload
+    def by_type(self, target_type: ExpressionType) -> ExpressionTypes:
+        ...
 
-    def extend(self, *new_types: NodeTypes) -> "Syntax":
-        return replace(self, types=self.types + list(new_types))
+    @overload
+    def by_type(self, target_type: MapType) -> MapTypes:
+        ...
+
+    @overload
+    def by_type(self, target_type: SequenceType) -> SequenceTypes:
+        ...
+
+    def by_type(self, target_type: NodeType) -> NodeTypes:
+        return tuple(t for t in self.types if issubclass(t, target_type))
+
+    def extend(self, *new_types: NodeType) -> "Syntax":
+        return replace(self, types=tuple([*self.types, *new_types]))
 
 
 # Initial syntax --------------------------------------------------------------
 
 
-empty_syntax = Syntax(types=[])
+empty_syntax = Syntax(types=())
 
-initial_syntax = Syntax(types=[Expression, Sequence])
+initial_syntax = Syntax(types=(Expression, Sequence))
 
 
 # Basic Syntax ----------------------------------------------------------------
@@ -182,16 +195,16 @@ class Doc(Map):
 
 
 @dataclass
-class Blocks(Sequence):
-    pass
-
-
-@dataclass
 class Block(Map):
     spec: Spec = Spec(
         Tag("name", Expression),
         Tag("content", Sequence),
     )
+
+
+@dataclass
+class Blocks(Sequence):
+    list_of: NodeType = Block
 
 
 @dataclass

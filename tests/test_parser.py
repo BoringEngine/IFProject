@@ -1,31 +1,43 @@
 from typing import NamedTuple
 
 import pytest
-from engine.parser import dump, parse
-from engine.syntax import A, Expression, If, Node, Sequence
+from engine.parser import Parser
+from engine.syntax import A, If, Node, Sequence, Value
 
 from .cases import Case, cases
 
-sample_node_cases = cases(
-    Case(
-        name="A Node",
-        val="a: action",
-        expects=A({"a": Expression("action")}),
-    ),
-    Case(
-        name="If Node",
-        val="""
-                if: condition1
-                then:
-                - a: action1
-                else:
-                - a: action2
-            """,
-        expects=If(
+class MyTestCase:
+    val: str
+    expected: Node
+
+
+@pytest.fixture
+def test_cases():
+    class a_obj(MyTestCase):
+        val = "a: action"
+        expects = A(data={"a": Value(data="action")})
+
+    class if_obj(MyTestCase):
+        val = """
+    if: condition1
+    then:
+    - a: action1
+    else:
+    - a: action2
+    """
+        expects = If(
             {
-                "if": Expression("condition1"),
-                "then": Sequence([A({"a": Expression("action1")})]),
-                "else": Sequence([A({"a": Expression("action2")})]),
+                "if": Value(data="condition1"),
+                "then": Sequence(
+                    [
+                        A(data={"a": Value(data="action1")}),
+                    ]
+                ),
+                "else": Sequence(
+                    [
+                        A(data={"a": Value(data="action2")}),
+                    ]
+                ),
             }
         ),
     ),

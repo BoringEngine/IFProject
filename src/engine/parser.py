@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from types import NoneType
+from typing import overload
 
 import logging518.config
 import yaml
@@ -11,14 +12,14 @@ log = logging.getLogger("Parser")
 
 from engine.exceptions import NotRecognized
 from engine.syntax import (
-    Expression,
     Map,
-    MapType,
     Node,
-    NodeType,
+    Nodes,
+    NodeTuple,
     Null,
     Sequence,
     Syntax,
+    Value,
     syntax_v1,
 )
 
@@ -74,10 +75,10 @@ class Parser:
         if isinstance(data, Path):
             data = data.read_text()
 
-        data = yaml.load(data, Loader=yaml.FullLoader)
-        return self._parse(data, node_type=None)
+        popo = yaml.load(data, Loader=yaml.FullLoader)
+        return self._parse_map(popo, node_type=None)
 
-    def dump(self, node: Node, file: Path = None) -> str:
+    def dump(self, node: Node, file: Path | None = None) -> str:
         """Dump an AST Node into a YAML string.
 
         Args:
@@ -97,45 +98,86 @@ class Parser:
 
         return result
 
-    def _parse(self, data: PoPo, node_type: NodeType) -> Node:
+    def _parse(self, data: PoPo, node_type: Nodes | None) -> Node:
         log_parse_start(data, node_type)
 
-        # Hack to match node types with class patterns
-        node_type_instance = node_type({}) if node_type else None
+        match data:
+            case str():
+                return self._parse_expression(data, node_type)
 
-        match data, node_type_instance:
-            case str(), Expression():
-                return node_type(data)
+            case list():
+                return self._parse_sequence(data, node_type)
 
-            case list(), Sequence():
-                return Sequence([self._parse(item, None) for item in data])
-
-            case dict(), None | Map():
+            case dict():
                 return self._parse_map(data, node_type)
 
-            case None, Null():
-                return Null()
+            case None:
+                return self._parse_null(data, node_type)
 
             case _:
                 raise TypeError(f"Data: {data} does not match node {node_type}")
 
-    def _parse_map(self, data, node_type: MapType | None) -> Map:
-        candidate_nodes = [node_type] if node_type else self.syntax.maps
-        log.debug(
-            f"=> Parse as map. Candidate nodes: "
-            "{[node.__name__ for node in candidate_nodes]}:"
-        )
+    def _parse_null(self, data: None, node_type: Nodes | None) -> Null:
+        if node_type is None:
+            raise NotRecognized(f"Failed to provide type for null: {data}")
+        if node_type is not Null:
+            raise NotRecognized(f"Unexpected null. Expected {node_type.__name__}")
+        log.debug(f"=> Parsing null.")
+        return Null()
+
+    def _parse_expression(self, data: str, node_type: Nodes | None) -> Value:
+        if node_type is None:
+            raise NotRecognized(f"Failed to provide type for expression: {data}")
+
+        if not issubclass(node_type, Value):
+            raise NotRecognized(f"Expected expression, got {node_type.__name__}")
+
+        log.debug(f"=> Parsing expression with {node_type.__name__}.")
+        return node_type(data)
+
+    def _parse_sequence(self, data: list[PoPo], node_type: Nodes | None) -> Sequence:
+        if node_type is None:
+            raise NotRecognized(f"Failed to provide type for sequence: {data}")
+
+        if not issubclass(node_type, Sequence):
+            raise NotRecognized(f"Expected sequence, got {node_type.__name__}")
+
+        log.debug(f"=> Parsing sequence with {node_type.__name__}.")
+        return node_type([self._parse(item, node_type.list_of) for item in data])
+
+    def _parse_map(self, data: dict[str, PoPo], node_type: Nodes | None) -> Map:
+        if node_type is None or node_type is Node:
+            if node_type is Node:
+                log.warn(
+                    "Deprecated: Use of Node as node_type."
+                    "Caused by generic sequence. Use Contents sequence instead."
+                )
+
+            # This is fine, we'll try to match the tags to a node type.
+            node_type = None
+        elif not issubclass(node_type, Map):
+            raise NotRecognized(f"Expected map, got {node_type.__name__}")
+
+        candidate_nodes: NodeTuple = (node_type,) if node_type else self.syntax.maps
 
         for node in candidate_nodes:
             if all(tag.key in data or tag.optional for tag in node.spec):
                 log.debug(f"===> Matched tags for {node.__name__}.")
-                result = {
-                    tag.key: self._parse(data[tag.key], tag.type)
-                    for tag in node.spec
-                    if tag.key in data
-                }
-                return node(result)
-        raise NotRecognized(f"Unrecognized map: {data}")
+                break
+        else:
+            raise NotRecognized(
+                f"Unrecognized map: {data}, "
+                "candidate nodes: {[node.type for node in candidate_nodes]}"
+            )
+
+        log.debug(f"Parsing {node.type}")
+
+        result = {}
+        for tag in node.spec:
+            if tag.key in data:
+                result[tag.key] = self._parse(data[tag.key], tag.type)
+
+        return node(result)
 
     def _dump(self, node: Node) -> PoPo:
         data, type = node.data, node.type
@@ -143,7 +185,7 @@ class Parser:
             case Null():
                 log.debug("Dumping Null node.")
                 return None
-            case Expression():
+            case Value(data):
                 log.debug(f"Dumping {type} expression: {data}")
                 return data
             case Map():

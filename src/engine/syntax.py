@@ -34,7 +34,7 @@ class Node:
 
 
 NodeType = type[Node]
-NodeTypes = tuple[NodeType]
+NodeTypes = tuple[NodeType, ...]
 
 
 @dataclass
@@ -45,10 +45,6 @@ class Value(Node):
     def __getitem__(self, index: Any = None):
         if index is not None:
             raise BadAddress("Terminal {self.type} accessed with index {index}")
-
-
-ExpressionType = type[Value]
-ExpressionTypes = tuple[ExpressionType]
 
 
 @dataclass
@@ -63,10 +59,6 @@ class Sequence(Node):
         if index + 1 > len(self.data):
             raise BadAddress(f"No subnode at index {index} in node {self}.")
         return self.data[index]
-
-
-SequenceType = type[Sequence]
-SequenceTypes = tuple[SequenceType]
 
 
 @dataclass
@@ -112,10 +104,6 @@ class Map(Node):
         return self.data[key]
 
 
-MapType = type[Map]
-MapTypes = tuple[MapType]
-
-
 # Syntax ----------------------------------------------------------------------
 
 
@@ -124,30 +112,30 @@ class Syntax:
     types: NodeTypes
 
     @property
-    def expressions(self) -> ExpressionTypes:
+    def expressions(self) -> NodeTypes:
         return self.by_type(Value)
 
     @property
-    def sequences(self) -> SequenceTypes:
+    def sequences(self) -> NodeTypes:
         return self.by_type(Sequence)
 
     @property
-    def maps(self) -> MapTypes:
+    def maps(self) -> NodeTypes:
         return self.by_type(Map)
 
     def by_type(self, target_type: NodeType) -> NodeTypes:
-        return [t for t in self.types if issubclass(t, target_type)]
+        return tuple(t for t in self.types if issubclass(t, target_type))
 
-    def extend(self, *new_types: NodeTypes) -> "Syntax":
-        return replace(self, types=self.types + list(new_types))
+    def extend(self, *new_types: NodeType) -> "Syntax":
+        return replace(self, types=(*self.types, *new_types))
 
 
 # Initial syntax --------------------------------------------------------------
 
 
-empty_syntax = Syntax(types=[])
+empty_syntax = Syntax(types=tuple())
 
-initial_syntax = Syntax(types=[Value, Sequence])
+initial_syntax = Syntax(types=(Value, Sequence))
 
 
 # Basic Syntax ----------------------------------------------------------------

@@ -12,7 +12,6 @@ log = logging.getLogger("Parser")
 from engine.exceptions import NotRecognized
 from engine.syntax import (
     Map,
-    MapType,
     Node,
     NodeType,
     Null,
@@ -119,7 +118,7 @@ class Parser:
             case _:
                 raise TypeError(f"Data: {data} does not match node {node_type}")
 
-    def _parse_map(self, data, node_type: MapType | None) -> Map:
+    def _parse_map(self, data, node_type: NodeType | None) -> Map:
         candidate_nodes = [node_type] if node_type else self.syntax.maps
         log.debug(
             f"=> Parse as map. Candidate nodes: "

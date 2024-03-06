@@ -99,24 +99,37 @@ class Parser:
     def _parse(self, data: PoPo, node_type: NodeType | None) -> Node:
         log_parse_start(data, node_type)
 
-        # Hack to match node types with class patterns
-        node_type_instance = node_type({}) if node_type else None
-
-        match data, node_type_instance:
-            case str(), Value():
-                return node_type(data)
-
-            case list(), Sequence():
-                return Sequence([self._parse(item, None) for item in data])
-
-            case dict(), None | Map():
+        match data:
+            case str():
+                return self._parse_value(data, node_type)
+            case list():
+                return self._parse_sequence(data, node_type)
+            case dict():
                 return self._parse_map(data, node_type)
-
-            case None, Null():
-                return Null()
-
+            case None:
+                return self._parse_null(data, node_type)
             case _:
                 raise TypeError(f"Data: {data} does not match node {node_type}")
+
+    def _parse_value(self, data: str, node_type: NodeType | None) -> Value:
+        log.debug(f"=> Parse as value: {data}")
+        if node_type is None or not issubclass(node_type, Value):
+            raise TypeError(f"Expected Value, got: {node_type}")
+        return node_type(data)
+
+    def _parse_sequence(self, data: list, node_type: NodeType | None) -> Sequence:
+        log.debug(f"=> Parse as sequence: {data}")
+        if node_type is None or not issubclass(node_type, Sequence):
+            raise TypeError(f"Expected Sequence, got: {node_type}")
+        return Sequence([self._parse(item, None) for item in data])
+
+    def _parse_null(self, data: None, node_type: NodeType | None) -> Null:
+        log.debug(f"=> Parse as null: {data}")
+        if not node_type is Null:
+            raise TypeError(f"Expected Null, got: {node_type}")
+        if data is not None:
+            raise NotRecognized(f"Unrecognized null: {data}")
+        return Null()
 
     def _parse_map(self, data, node_type: NodeType | None) -> Map:
         candidate_nodes = [node_type] if node_type else self.syntax.maps

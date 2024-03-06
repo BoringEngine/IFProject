@@ -28,6 +28,33 @@ class Node:
 
         return current_node
 
+    def __getitem__(self, index: int | str | None = None):
+        match self:
+            case Sequence():
+                if not isinstance(index, int):
+                    raise BadAddress(f"Index {index} must be an integer.")
+                if index < 0:
+                    raise BadAddress(f"Negative index {index} is not allowed.")
+                if index + 1 > len(self.data):
+                    raise BadAddress(f"No subnode at index {index} in node {self}.")
+                return self.data[index]
+
+            case Map():
+                if not isinstance(index, str):
+                    raise BadAddress(f"Map node requires string index. Given: {index}.")
+                if index not in self.spec.keys:
+                    raise BadAddress(f"{self.name} node has no {index} key.")
+                if index in self.data:
+                    return self.data[index]
+                if index in self.spec.optional_keys:
+                    return None  # Should this be Null?
+                raise BadNode("{self.type} Map node missing a required key: {key}")
+
+            case Value() | Null():
+                if index is not None:
+                    raise BadAddress("Terminal {self.type} accessed with index {index}")
+                return self.data
+
     @property
     def name(self):
         return self.__class__.__name__
@@ -50,15 +77,6 @@ class Value(Node):
 @dataclass
 class Sequence(Node):
     data: list
-
-    def __getitem__(self, index: int):
-        if not isinstance(index, int):
-            raise BadAddress(f"Sequence node requires integer index. Given: {index}.")
-        if index < 0:
-            raise BadAddress(f"Negative index {index} is not allowed.")
-        if index + 1 > len(self.data):
-            raise BadAddress(f"No subnode at index {index} in node {self}.")
-        return self.data[index]
 
 
 @dataclass
@@ -88,20 +106,6 @@ class Spec:
 class Map(Node):
     data: dict
     spec: Spec
-
-    def __getitem__(self, key: str):
-        if not isinstance(key, str):
-            raise BadAddress(f"Map node requires string index. Given: {key}.")
-
-        if key not in self.spec.keys:
-            raise BadAddress(f"{self.name} node has no {key} key.")
-
-        if key not in self.data:
-            if key in self.spec.optional_keys:
-                return None
-            raise BadNode("{self.type} Map node missing a required key: {key}")
-
-        return self.data[key]
 
 
 # Syntax ----------------------------------------------------------------------

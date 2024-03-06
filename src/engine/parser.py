@@ -74,10 +74,10 @@ class Parser:
         if isinstance(data, Path):
             data = data.read_text()
 
-        data = yaml.load(data, Loader=yaml.FullLoader)
-        return self._parse(data, node_type=None)
+        popo = yaml.load(data, Loader=yaml.FullLoader)
+        return self._parse(data=popo, node_type=None)
 
-    def dump(self, node: Node, file: Path = None) -> str:
+    def dump(self, node: Node, file: Path | None = None) -> str:
         """Dump an AST Node into a YAML string.
 
         Args:
@@ -97,7 +97,7 @@ class Parser:
 
         return result
 
-    def _parse(self, data: PoPo, node_type: NodeType) -> Node:
+    def _parse(self, data: PoPo, node_type: NodeType | None) -> Node:
         log_parse_start(data, node_type)
 
         # Hack to match node types with class patterns

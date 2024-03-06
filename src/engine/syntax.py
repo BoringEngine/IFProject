@@ -72,7 +72,7 @@ SequenceTypes = tuple[SequenceType]
 @dataclass
 class Tag:
     key: str
-    type: Node
+    type: NodeType
     optional: bool = False
 
 

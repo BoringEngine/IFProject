@@ -38,7 +38,7 @@ NodeTypes = tuple[NodeType]
 
 
 @dataclass
-class Expression(Node):
+class Value(Node):
     data: str
     pattern: str = ".*"
 
@@ -47,7 +47,7 @@ class Expression(Node):
             raise BadAddress("Terminal {self.type} accessed with index {index}")
 
 
-ExpressionType = type[Expression]
+ExpressionType = type[Value]
 ExpressionTypes = tuple[ExpressionType]
 
 
@@ -125,7 +125,7 @@ class Syntax:
 
     @property
     def expressions(self) -> ExpressionTypes:
-        return self.by_type(Expression)
+        return self.by_type(Value)
 
     @property
     def sequences(self) -> SequenceTypes:
@@ -147,7 +147,7 @@ class Syntax:
 
 empty_syntax = Syntax(types=[])
 
-initial_syntax = Syntax(types=[Expression, Sequence])
+initial_syntax = Syntax(types=[Value, Sequence])
 
 
 # Basic Syntax ----------------------------------------------------------------
@@ -161,14 +161,14 @@ class Null(Node):
 @dataclass
 class A(Map):
     spec: Spec = Spec(
-        Tag("a", Expression),
+        Tag("a", Value),
     )
 
 
 @dataclass
 class If(Map):
     spec: Spec = Spec(
-        Tag("if", Expression),
+        Tag("if", Value),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
     )
@@ -189,7 +189,7 @@ class Blocks(Sequence):
 @dataclass
 class Block(Map):
     spec: Spec = Spec(
-        Tag("name", Expression),
+        Tag("name", Value),
         Tag("content", Sequence),
     )
 
@@ -202,23 +202,23 @@ class Content(Sequence):
 @dataclass
 class Goto(Map):
     spec: Spec = Spec(
-        Tag("goto", Expression),
+        Tag("goto", Value),
     )
 
 
 @dataclass
 class GoSub(Map):
     spec: Spec = Spec(
-        Tag("gosub", Expression),
+        Tag("gosub", Value),
     )
 
 
 @dataclass
 class Choice(Map):
     spec: Spec = Spec(
-        Tag("choice", Expression),
+        Tag("choice", Value),
         Tag("effects", Content),
-        Tag("text", Expression, optional=True),
+        Tag("text", Value, optional=True),
         # Tags ommited:
         # Tag("shown_effects", Sequence[ShownEffect], optional=True),
         # Tag("reusable", Expression, optional=True),
@@ -228,7 +228,7 @@ class Choice(Map):
 @dataclass
 class Print(Map):
     spec: Spec = Spec(
-        Tag("print", Expression),
+        Tag("print", Value),
     )
 
 
@@ -254,12 +254,12 @@ class Wait(Map):
 
 
 @dataclass
-class Variable(Expression):
+class Variable(Value):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
 
 @dataclass
-class Text(Expression):
+class Text(Value):
     pattern: str = "[a-zA-Z_]*"
 
 

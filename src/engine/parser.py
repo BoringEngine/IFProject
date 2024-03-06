@@ -11,7 +11,6 @@ log = logging.getLogger("Parser")
 
 from engine.exceptions import NotRecognized
 from engine.syntax import (
-    Expression,
     Map,
     MapType,
     Node,
@@ -19,6 +18,7 @@ from engine.syntax import (
     Null,
     Sequence,
     Syntax,
+    Value,
     syntax_v1,
 )
 
@@ -104,7 +104,7 @@ class Parser:
         node_type_instance = node_type({}) if node_type else None
 
         match data, node_type_instance:
-            case str(), Expression():
+            case str(), Value():
                 return node_type(data)
 
             case list(), Sequence():
@@ -143,7 +143,7 @@ class Parser:
             case Null():
                 log.debug("Dumping Null node.")
                 return None
-            case Expression():
+            case Value():
                 log.debug(f"Dumping {type} expression: {data}")
                 return data
             case Map():

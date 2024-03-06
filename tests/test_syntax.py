@@ -23,7 +23,7 @@ def test_type_property(example_node):
 
 @fixture
 def example_expression():
-    return Expression("test")
+    return Value("test")
 
 
 def test_initialization(example_expression):
@@ -36,7 +36,7 @@ def test_initialization(example_expression):
 
 @fixture
 def example_sequence():
-    return Content([Expression("test")])
+    return Content([Value("test")])
 
 
 def test_empty_sequence():
@@ -49,15 +49,15 @@ def test_empty_sequence():
 
 @fixture
 def example_map():
-    return A({"a": Expression("test")})
+    return A({"a": Value("test")})
 
 
 # Complex Nodes ------------------------------------------------------------
 
 
-Text = Expression
-Id = Expression
-Address = Expression
+Text = Value
+Id = Value
+Address = Value
 
 
 @fixture
@@ -84,12 +84,12 @@ def example_complex_node():
                                 [
                                     If(
                                         {
-                                            "if": Expression("pi=3.14"),
+                                            "if": Value("pi=3.14"),
                                             "then": Content(
                                                 [
                                                     GoSub({"gosub": Address("home")}),
                                                     GoSub({"gosub": Address("sleep")}),
-                                                    Expression("days += 1"),
+                                                    Value("days += 1"),
                                                 ]
                                             ),
                                             "else": Content(
@@ -101,7 +101,7 @@ def example_complex_node():
                                                                 [
                                                                     Content(
                                                                         [
-                                                                            Expression(
+                                                                            Value(
                                                                                 "nested_node"
                                                                             )
                                                                         ]
@@ -161,10 +161,10 @@ class TestGetItem:
     ...
 
     def test_sequence_indexing(self, example_sequence):
-        assert example_sequence[0] == Expression("test")
+        assert example_sequence[0] == Value("test")
 
     def test_map_indexing(self, example_map):
-        assert example_map["a"] == Expression("test")
+        assert example_map["a"] == Value("test")
 
     def test_complex_indexing(self, example_complex_node):
         assert type(example_complex_node["blocks"]) == Content
@@ -198,7 +198,7 @@ class TestGetAddr:
     @cases(
         Case("Empty Address", [], Doc),
         Case("Simple Address", ["blocks"], Content),
-        Case("Simple Address with Index", ["blocks", 1, "name"], Expression),
+        Case("Simple Address with Index", ["blocks", 1, "name"], Value),
     )
     def test_valid_addresses_by_types(self, case, example_complex_node):
         result = example_complex_node.get_addr(case.val)
@@ -209,7 +209,7 @@ class TestGetAddr:
         Case(
             "Nested Address",
             ["blocks", 1, "content", 0, "else", 1, 0, 0, 0],
-            Expression("nested_node"),
+            Value("nested_node"),
         ),
     )
     def test_valid_address_by_vals(self, case, example_complex_node):

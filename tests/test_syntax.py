@@ -14,8 +14,8 @@ def example_node():
     return Node()
 
 
-def test_type_property(example_node):
-    assert example_node.type == "Node"
+def test_name_property(example_node):
+    assert example_node.name == "Node"
 
 
 # Expression --------------------------------------------------------------

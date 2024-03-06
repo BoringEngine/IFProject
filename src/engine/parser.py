@@ -32,7 +32,7 @@ def log_parse_start(data, node_type):
     elif node_type is NoneType:
         name = "NoneType"
     else:
-        name = node_type.__name__
+        name = node_type.name
     data_string = str(data).strip()[:80]
     log.debug(f"Parsing {name} node with: {data_string}")
 
@@ -123,12 +123,12 @@ class Parser:
         candidate_nodes = [node_type] if node_type else self.syntax.maps
         log.debug(
             f"=> Parse as map. Candidate nodes: "
-            "{[node.__name__ for node in candidate_nodes]}:"
+            "{[node.name for node in candidate_nodes]}:"
         )
 
         for node in candidate_nodes:
             if all(tag.key in data or tag.optional for tag in node.spec):
-                log.debug(f"===> Matched tags for {node.__name__}.")
+                log.debug(f"===> Matched tags for {node.name}.")
                 result = {
                     tag.key: self._parse(data[tag.key], tag.type)
                     for tag in node.spec
@@ -138,7 +138,7 @@ class Parser:
         raise NotRecognized(f"Unrecognized map: {data}")
 
     def _dump(self, node: Node) -> PoPo:
-        data, type = node.data, node.type
+        data, type = node.data, node.name
         match node:
             case Null():
                 log.debug("Dumping Null node.")

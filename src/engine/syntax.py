@@ -29,7 +29,7 @@ class Node:
         return current_node
 
     @property
-    def type(self):
+    def name(self):
         return self.__class__.__name__
 
 
@@ -102,7 +102,7 @@ class Map(Node):
             raise BadAddress(f"Map node requires string index. Given: {key}.")
 
         if key not in self.spec.keys:
-            raise BadAddress(f"{self.type} node has no {key} key.")
+            raise BadAddress(f"{self.name} node has no {key} key.")
 
         if key not in self.data:
             if key in self.spec.optional_keys:

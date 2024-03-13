@@ -36,11 +36,11 @@ class Node:
             case Map():
                 if not isinstance(index, str):
                     raise BadAddress(f"Map node requires string index. Given: {index}.")
-                if index not in self.spec.keys:
+                if index not in self.keys:
                     raise BadAddress(f"{self.name} node has no {index} key.")
                 if index in self.data:
                     return self.data[index]
-                if index in self.spec.optional_keys:
+                if index in self.optional_keys:
                     return None  # Should this be Null?
                 raise BadNode("{self.type} Map node missing a required key: {key}")
 
@@ -88,31 +88,28 @@ class Tag:
     def __init__(self, key: str, type: NodeType | str, optional: bool = False):
         self.key = key
         self.type = type
-        self.optional
-
-
-class Spec:
-    tags: list[Tag]
-
-    def __init__(self, *tags):
-        self.tags = tags
-        self.compile()
-
-    def compile(self):
-        self.keys = [tag.key for tag in self.tags]
-        self.required_keys = [tag.key for tag in self.tags if not tag.optional]
-        self.optional_keys = [tag.key for tag in self.tags if not tag.optional]
-
-    def __iter__(self):
-        return iter(self.tags)
+        self.optional = optional
 
 
 class Map(Node):
     data: dict
-    spec: Spec
+    spec: tuple[Tag, ...]
+    keys: list[str] = []
+    required_keys: list[str] = []
+    optional_keys: list[str] = []
 
     def __init__(self, data: dict):
         self.data = data
+
+    @classmethod
+    def compile(self):
+        self.optional_keys = [tag.key for tag in self.spec if not tag.optional]
+        for tag in self.spec:
+            self.keys.append(tag.key)
+            if not tag.optional:
+                self.required_keys.append(tag.key)
+            if isinstance(tag.type, str):
+                tag.type = globals()[tag.type]
 
 
 # Syntax ----------------------------------------------------------------------
@@ -123,6 +120,9 @@ class Syntax:
 
     def __init__(self, *types: NodeType):
         self.types = types
+        for type in types:
+            if issubclass(type, Map):
+                type.compile()
 
     @property
     def expressions(self) -> NodeTypes:
@@ -148,13 +148,11 @@ class Null(Node):
 
 
 class A(Map):
-    spec = Spec(
-        Tag("a", Value),
-    )
+    spec = (Tag("a", Value),)
 
 
 class If(Map):
-    spec = Spec(
+    spec = (
         Tag("if", Value),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
@@ -162,9 +160,7 @@ class If(Map):
 
 
 class Doc(Map):
-    spec = Spec(
-        Tag("blocks", Sequence),
-    )
+    spec = (Tag("blocks", Sequence),)
 
 
 class Blocks(Sequence):
@@ -172,7 +168,7 @@ class Blocks(Sequence):
 
 
 class Block(Map):
-    spec = Spec(
+    spec = (
         Tag("name", Value),
         Tag("content", Sequence),
     )
@@ -183,19 +179,15 @@ class Content(Sequence):
 
 
 class Goto(Map):
-    spec = Spec(
-        Tag("goto", Value),
-    )
+    spec = (Tag("goto", Value),)
 
 
 class GoSub(Map):
-    spec = Spec(
-        Tag("gosub", Value),
-    )
+    spec = (Tag("gosub", Value),)
 
 
 class Choice(Map):
-    spec = Spec(
+    spec = (
         Tag("choice", Value),
         Tag("effects", Content),
         Tag("text", Value, optional=True),
@@ -206,27 +198,19 @@ class Choice(Map):
 
 
 class Print(Map):
-    spec = Spec(
-        Tag("print", Value),
-    )
+    spec = (Tag("print", Value),)
 
 
 class Error(Map):
-    spec = Spec(
-        Tag("error", Null),
-    )
+    spec = (Tag("error", Null),)
 
 
 class Return(Map):
-    spec = Spec(
-        Tag("return", Null),
-    )
+    spec = (Tag("return", Null),)
 
 
 class Wait(Map):
-    spec = Spec(
-        Tag("wait", Null),
-    )
+    spec = (Tag("wait", Null),)
 
 
 class Variable(Value):

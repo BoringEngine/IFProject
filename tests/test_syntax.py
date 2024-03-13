@@ -231,12 +231,6 @@ class TestGetAddr:
 # Simple Syntax ------------------------------------------------------------
 
 
-def test_empty_syntax():
-    assert not empty_syntax.expressions
-    assert not empty_syntax.sequences
-    assert not empty_syntax.maps
-
-
 def test_simple_syntax_extension():
     assert If in simple_syntax.types
     assert A in simple_syntax.types

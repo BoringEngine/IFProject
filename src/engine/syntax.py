@@ -1,10 +1,4 @@
-import re
-import types
-from dataclasses import dataclass, replace
-from pathlib import Path
-from typing import Any, Optional
-
-import yaml
+from typing import Any
 
 from engine.exceptions import BadAddress, BadNode
 
@@ -59,31 +53,42 @@ class Node:
     def name(self):
         return self.__class__.__name__
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 
 NodeType = type[Node]
 NodeTypes = tuple[NodeType, ...]
 
 
-@dataclass
 class Value(Node):
     data: str
     pattern: str = ".*"
+
+    def __init__(self, data: str):
+        self.data = data
 
     def __getitem__(self, index: Any = None):
         if index is not None:
             raise BadAddress("Terminal {self.type} accessed with index {index}")
 
 
-@dataclass
 class Sequence(Node):
     data: list
 
+    def __init__(self, data: list):
+        self.data = data
 
-@dataclass
+
 class Tag:
     key: str
-    type: NodeType
+    type: NodeType | str
     optional: bool = False
+
+    def __init__(self, key: str, type: NodeType | str, optional: bool = False):
+        self.key = key
+        self.type = type
+        self.optional
 
 
 class Spec:
@@ -102,18 +107,22 @@ class Spec:
         return iter(self.tags)
 
 
-@dataclass
 class Map(Node):
     data: dict
     spec: Spec
+
+    def __init__(self, data: dict):
+        self.data = data
 
 
 # Syntax ----------------------------------------------------------------------
 
 
-@dataclass
 class Syntax:
     types: NodeTypes
+
+    def __init__(self, *types: NodeType):
+        self.types = types
 
     @property
     def expressions(self) -> NodeTypes:
@@ -130,84 +139,63 @@ class Syntax:
     def by_type(self, target_type: NodeType) -> NodeTypes:
         return tuple(t for t in self.types if issubclass(t, target_type))
 
-    def extend(self, *new_types: NodeType) -> "Syntax":
-        return replace(self, types=(*self.types, *new_types))
-
-
-# Initial syntax --------------------------------------------------------------
-
-
-empty_syntax = Syntax(types=tuple())
-
-initial_syntax = Syntax(types=(Value, Sequence))
-
 
 # Basic Syntax ----------------------------------------------------------------
 
 
-@dataclass
 class Null(Node):
     data: None = None
 
 
-@dataclass
 class A(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("a", Value),
     )
 
 
-@dataclass
 class If(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("if", Value),
         Tag("then", Sequence),
         Tag("else", Sequence, optional=True),
     )
 
 
-@dataclass
 class Doc(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("blocks", Sequence),
     )
 
 
-@dataclass
 class Blocks(Sequence):
     pass
 
 
-@dataclass
 class Block(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("name", Value),
         Tag("content", Sequence),
     )
 
 
-@dataclass
 class Content(Sequence):
     pass
 
 
-@dataclass
 class Goto(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("goto", Value),
     )
 
 
-@dataclass
 class GoSub(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("gosub", Value),
     )
 
 
-@dataclass
 class Choice(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("choice", Value),
         Tag("effects", Content),
         Tag("text", Value, optional=True),
@@ -217,45 +205,39 @@ class Choice(Map):
     )
 
 
-@dataclass
 class Print(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("print", Value),
     )
 
 
-@dataclass
 class Error(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("error", Null),
     )
 
 
-@dataclass
 class Return(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("return", Null),
     )
 
 
-@dataclass
 class Wait(Map):
-    spec: Spec = Spec(
+    spec = Spec(
         Tag("wait", Null),
     )
 
 
-@dataclass
 class Variable(Value):
     pattern: str = "^[a-zA-Z_][a-zA-Z0-9_]*$"
 
 
-@dataclass
 class Text(Value):
     pattern: str = "[a-zA-Z_]*"
 
 
-simple_syntax = initial_syntax.extend(
+simple_syntax = Syntax(
     If,
     A,
     Variable,

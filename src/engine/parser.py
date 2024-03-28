@@ -121,6 +121,7 @@ class Parser:
         log.debug(f"=> Parse as sequence: {data}")
         if node_type is None or not issubclass(node_type, Sequence):
             raise TypeError(f"Expected Sequence, got: {node_type}")
+        # Fix me: Implement list_of type checking
         return Sequence([self._parse(item, None) for item in data])
 
     def _parse_null(self, data: None, node_type: NodeType | None) -> Null:

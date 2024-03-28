@@ -79,6 +79,8 @@ class Sequence(Node):
     def __init__(self, data: list):
         self.data = data
 
+    # Fix me: Add list_of
+
 
 class Tag:
     key: str
@@ -111,6 +113,8 @@ class Map(Node):
             if isinstance(tag.type, str):
                 tag.type = globals()[tag.type]
 
+
+# Fix me: Implement Disjunct
 
 # Syntax ----------------------------------------------------------------------
 
@@ -164,7 +168,7 @@ class Doc(Map):
 
 
 class Blocks(Sequence):
-    pass
+    pass  # Fix me
 
 
 class Block(Map):
@@ -175,7 +179,7 @@ class Block(Map):
 
 
 class Content(Sequence):
-    pass
+    pass  # Fix me
 
 
 class Goto(Map):
@@ -194,11 +198,13 @@ class Choice(Map):
         # Tags ommited:
         # Tag("shown_effects", Sequence[ShownEffect], optional=True),
         # Tag("reusable", Value, optional=True),
+        # Fix me
     )
 
 
 class Print(Map):
     spec = (Tag("print", Value),)
+    # Fix me: Introduce a text type
 
 
 class Error(Map):

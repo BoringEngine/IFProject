@@ -18,17 +18,17 @@ def test_name_property(example_node):
     assert example_node.name == "Node"
 
 
-# Expression --------------------------------------------------------------
+# Value --------------------------------------------------------------
 
 
 @fixture
-def example_expression():
+def example_value():
     return Value("test")
 
 
-def test_initialization(example_expression):
-    assert example_expression.data == "test"
-    assert example_expression.pattern == ".*"
+def test_initialization(example_value):
+    assert example_value.data == "test"
+    assert example_value.pattern == ".*"
 
 
 # Sequence ----------------------------------------------------------------
@@ -180,7 +180,7 @@ class TestGetItem:
         with raises(BadAddress):
             example_map[case.val]
 
-    def test_invalid_expression_index(self, example_complex_node):
+    def test_invalid_value_index(self, example_complex_node):
         with raises(BadAddress):
             example_complex_node["blocks"][0]["name"]["data"]
 

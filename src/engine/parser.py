@@ -156,7 +156,7 @@ class Parser:
                 log.debug("Dumping Null node.")
                 return None
             case Value():
-                log.debug(f"Dumping {type} expression: {data}")
+                log.debug(f"Dumping {type} value: {data}")
                 return data
             case Map():
                 log.debug(f"Dumping {type} map: {data}")

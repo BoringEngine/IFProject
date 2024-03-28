@@ -125,7 +125,7 @@ class Syntax:
                 type.compile()
 
     @property
-    def expressions(self) -> NodeTypes:
+    def values(self) -> NodeTypes:
         return self.by_type(Value)
 
     @property
@@ -193,7 +193,7 @@ class Choice(Map):
         Tag("text", Value, optional=True),
         # Tags ommited:
         # Tag("shown_effects", Sequence[ShownEffect], optional=True),
-        # Tag("reusable", Expression, optional=True),
+        # Tag("reusable", Value, optional=True),
     )
 
 
